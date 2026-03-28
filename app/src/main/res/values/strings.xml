@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Eter</string>
+    <string name="feed">Feed</string>
+    <string name="subscriptions">Subscriptions</string>
+    <string name="following">Following</string>
+    <string name="create">Create</string>
+    <string name="favorites">Favorites</string>
+    <string name="profile">Profile</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="confirm_email">Confirm Email</string>
+    <string name="forgot_password">Forgot Password</string>
+    <string name="notifications">Notifications</string>
+    <string name="record_audio">Record Audio</string>
+    <string name="publish">Publish</string>
+    <string name="lyric_sync">Lyric Sync</string>
+    <string name="post">Post</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="followers">Followers</string>
+    <string name="settings">Settings</string>
+    <string name="manage_subscription">Manage Subscription</string>
+</resources>

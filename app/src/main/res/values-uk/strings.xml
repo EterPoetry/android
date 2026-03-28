@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Eter</string>
+    <string name="feed">Стрічка</string>
+    <string name="subscriptions">Підписки</string>
+    <string name="following">Стежу</string>
+    <string name="create">Створити</string>
+    <string name="favorites">Улюблені</string>
+    <string name="profile">Профіль</string>
+    <string name="login">Логін</string>
+    <string name="register">Реєстрація</string>
+    <string name="confirm_email">Підтвердження пошти</string>
+    <string name="forgot_password">Забули пароль</string>
+    <string name="notifications">Сповіщення</string>
+    <string name="record_audio">Запис аудіо</string>
+    <string name="publish">Публікація</string>
+    <string name="lyric_sync">Синхронізація тексту</string>
+    <string name="post">Пост</string>
+    <string name="edit_profile">Редагувати профіль</string>
+    <string name="followers">Підписники</string>
+    <string name="settings">Налаштування</string>
+    <string name="manage_subscription">Управління підпискою</string>
+</resources>
