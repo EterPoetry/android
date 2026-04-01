@@ -1,5 +1,8 @@
 package com.nestorian87.eter.di
 
+import com.nestorian87.eter.di.qualifier.DefaultDispatcher
+import com.nestorian87.eter.di.qualifier.IoDispatcher
+import com.nestorian87.eter.di.qualifier.MainDispatcher
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

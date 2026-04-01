@@ -20,7 +20,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "API_BASE_URL", "\"https://api.example.com/\"")
+        buildConfigField("String", "API_BASE_URL", "\"https://api.eter.pp.ua/\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -79,6 +79,8 @@ dependencies {
     implementation(libs.com.squareup.retrofit2.retrofit)
     implementation(libs.com.jakewharton.retrofit.kotlinx.serialization)
     implementation(libs.com.squareup.okhttp3.logging)
+    debugImplementation(libs.com.chuckerteam.chucker.library)
+    releaseImplementation(libs.com.chuckerteam.chucker.library.no.op)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.paging)

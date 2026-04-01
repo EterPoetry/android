@@ -2,15 +2,14 @@ package com.nestorian87.eter.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.nestorian87.eter.ui.screens.auth.EmailConfirmationScreen
 import com.nestorian87.eter.ui.screens.auth.ForgotPasswordScreen
-import com.nestorian87.eter.ui.screens.auth.LoginScreen
 import com.nestorian87.eter.ui.screens.auth.RegisterScreen
+import com.nestorian87.eter.ui.screens.auth.login.LoginScreen
 import com.nestorian87.eter.ui.screens.create.LyricSyncScreen
 import com.nestorian87.eter.ui.screens.create.PublishScreen
 import com.nestorian87.eter.ui.screens.create.RecordAudioScreen
@@ -40,7 +39,10 @@ fun EterNavigation(
         ),
         entryProvider = entryProvider {
             entry<LoginKey> {
-                LoginScreen(modifier = modifier)
+                LoginScreen(
+                    modifier = modifier,
+                    onLoginSuccess = navigationState::showMain,
+                )
             }
             entry<RegisterKey> {
                 RegisterScreen(modifier = modifier)

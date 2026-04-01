@@ -19,4 +19,20 @@
     <string name="followers">Followers</string>
     <string name="settings">Settings</string>
     <string name="manage_subscription">Manage Subscription</string>
+    <string name="auth_email_label">Email address</string>
+    <string name="auth_email_placeholder">Enter your email</string>
+    <string name="auth_password_label">Password</string>
+    <string name="auth_password_placeholder">Enter your password</string>
+    <string name="auth_toggle_password_visibility">Toggle password visibility</string>
+    <string name="auth_login_cta">Sign in</string>
+    <string name="auth_forgot_password_cta">Forgot password?</string>
+    <string name="auth_create_account_cta">Create account</string>
+    <string name="auth_or">or</string>
+    <string name="auth_google_cta">Continue with Google</string>
+    <string name="auth_fill_credentials_error">Fill in email and password</string>
+    <string name="auth_invalid_credentials_error">Incorrect email or password</string>
+    <string name="auth_generic_error">Could not sign in. Try again.</string>
+    <string name="auth_network_error">Network error. Check your connection.</string>
+    <string name="auth_unexpected_error">Something went wrong. Try again.</string>
+    <string name="brand_logo_content_description">Eter logo</string>
 </resources>

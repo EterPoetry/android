@@ -30,6 +30,7 @@ turbine = "1.2.1"
 mockk = "1.14.6"
 testCore = "1.7.0"
 truth = "1.4.4"
+chucker = "4.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -86,6 +87,8 @@ io-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 app-cash-turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "testCore" }
 com-google-truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
+com-chuckerteam-chucker-library = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
+com-chuckerteam-chucker-library-no-op = { group = "com.github.chuckerteam.chucker", name = "library-no-op", version.ref = "chucker" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
