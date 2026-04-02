@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.nestorian87.eter.BuildConfig
 import com.nestorian87.eter.R
 import com.nestorian87.eter.ui.components.FormScreenScaffold
 import com.nestorian87.eter.ui.components.GoogleAuthButton
@@ -46,6 +47,8 @@ import com.nestorian87.eter.ui.components.TextAction
 import com.nestorian87.eter.ui.components.UnderlinedTextField
 import com.nestorian87.eter.ui.components.AnimatedErrorMessage
 import com.nestorian87.eter.ui.screens.auth.AuthInputLimits
+import com.nestorian87.eter.ui.screens.auth.AuthSubmissionType
+import com.nestorian87.eter.ui.screens.auth.google.rememberGoogleIdTokenRequester
 import com.nestorian87.eter.ui.screens.auth.toMessageResId
 import com.nestorian87.eter.ui.theme.EterPreview
 import com.nestorian87.eter.ui.theme.EterScreenPreviews
@@ -78,6 +81,8 @@ fun RegisterScreen(
         onPasswordVisibilityToggled = viewModel::onPasswordVisibilityToggled,
         onConfirmPasswordVisibilityToggled = viewModel::onConfirmPasswordVisibilityToggled,
         onRegisterClick = viewModel::onRegisterClick,
+        onGoogleIdTokenReceived = viewModel::onGoogleIdTokenReceived,
+        onGoogleAuthFailed = viewModel::onGoogleAuthFailed,
         onNavigateToLogin = onNavigateToLogin,
     )
 }
@@ -92,6 +97,8 @@ private fun RegisterScreenContent(
     onPasswordVisibilityToggled: () -> Unit,
     onConfirmPasswordVisibilityToggled: () -> Unit,
     onRegisterClick: () -> Unit,
+    onGoogleIdTokenReceived: (String) -> Unit,
+    onGoogleAuthFailed: () -> Unit,
     onNavigateToLogin: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -100,6 +107,12 @@ private fun RegisterScreenContent(
     val confirmPasswordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val bottomBarContentInset = 148.dp
+    val isSubmitting = uiState.activeSubmission != null
+    val requestGoogleIdToken = rememberGoogleIdTokenRequester(
+        serverClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID,
+        onTokenReceived = onGoogleIdTokenReceived,
+        onFailure = onGoogleAuthFailed,
+    )
 
     FormScreenScaffold(
         modifier = modifier,
@@ -112,11 +125,12 @@ private fun RegisterScreenContent(
         bottomBar = {
             PrimaryActionButton(
                 text = stringResource(R.string.auth_register_cta),
-                enabled = uiState.name.isNotBlank() &&
+                enabled = !isSubmitting &&
+                    uiState.name.isNotBlank() &&
                     uiState.email.isNotBlank() &&
                     uiState.password.isNotBlank() &&
                     uiState.confirmPassword.isNotBlank(),
-                isLoading = uiState.isSubmitting,
+                isLoading = uiState.activeSubmission == AuthSubmissionType.CREDENTIALS,
                 onClick = onRegisterClick,
             )
         },
@@ -243,6 +257,9 @@ private fun RegisterScreenContent(
         Spacer(modifier = Modifier.height(EterSpacing.xxxLarge))
         GoogleAuthButton(
             text = stringResource(R.string.auth_google_cta),
+            enabled = !isSubmitting,
+            isLoading = uiState.activeSubmission == AuthSubmissionType.GOOGLE,
+            onClick = requestGoogleIdToken,
         )
         Spacer(modifier = Modifier.height(EterSpacing.xxLarge))
     }
@@ -281,6 +298,8 @@ private fun RegisterScreenPreview() {
             onPasswordVisibilityToggled = {},
             onConfirmPasswordVisibilityToggled = {},
             onRegisterClick = {},
+            onGoogleIdTokenReceived = {},
+            onGoogleAuthFailed = {},
             onNavigateToLogin = {},
         )
     }

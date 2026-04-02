@@ -7,6 +7,7 @@ class AuthException(
 
     enum class Reason {
         INVALID_CREDENTIALS,
+        GOOGLE_AUTH_FAILED,
         INVALID_REGISTRATION_DATA,
         INVALID_VERIFICATION_CODE,
         EMAIL_VERIFICATION_RATE_LIMIT,

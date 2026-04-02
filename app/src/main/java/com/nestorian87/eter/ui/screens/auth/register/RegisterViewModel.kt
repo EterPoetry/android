@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nestorian87.eter.domain.repository.AuthRepository
 import com.nestorian87.eter.ui.screens.auth.AuthInputLimits
+import com.nestorian87.eter.ui.screens.auth.AuthSubmissionType
 import com.nestorian87.eter.ui.screens.auth.AuthUiMessage
 import com.nestorian87.eter.ui.screens.auth.isValidEmail
 import com.nestorian87.eter.ui.screens.auth.toAuthUiMessage
@@ -75,9 +76,46 @@ class RegisterViewModel @Inject constructor(
         }
     }
 
+    fun onGoogleAuthFailed() {
+        _uiState.update { current ->
+            current.copy(
+                activeSubmission = null,
+                errorMessage = AuthUiMessage.GoogleAuthFailed,
+            )
+        }
+    }
+
+    fun onGoogleIdTokenReceived(idToken: String) {
+        if (_uiState.value.activeSubmission != null) {
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    activeSubmission = AuthSubmissionType.GOOGLE,
+                    errorMessage = null,
+                )
+            }
+            runCatching {
+                authRepository.loginWithGoogle(idToken = idToken)
+            }.onSuccess {
+                _uiState.update { it.copy(activeSubmission = null, errorMessage = null) }
+                effectChannel.send(RegisterEffect.NavigateToMain)
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        activeSubmission = null,
+                        errorMessage = error.toAuthUiMessage(),
+                    )
+                }
+            }
+        }
+    }
+
     fun onRegisterClick() {
         val snapshot = _uiState.value
-        if (snapshot.isSubmitting) {
+        if (snapshot.activeSubmission != null) {
             return
         }
 
@@ -103,7 +141,12 @@ class RegisterViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, errorMessage = null) }
+            _uiState.update {
+                it.copy(
+                    activeSubmission = AuthSubmissionType.CREDENTIALS,
+                    errorMessage = null,
+                )
+            }
             runCatching {
                 authRepository.register(
                     name = name,
@@ -111,12 +154,12 @@ class RegisterViewModel @Inject constructor(
                     password = password,
                 )
             }.onSuccess {
-                _uiState.update { it.copy(isSubmitting = false, errorMessage = null) }
+                _uiState.update { it.copy(activeSubmission = null, errorMessage = null) }
                 effectChannel.send(RegisterEffect.NavigateToMain)
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(
-                        isSubmitting = false,
+                        activeSubmission = null,
                         errorMessage = error.toAuthUiMessage(),
                     )
                 }

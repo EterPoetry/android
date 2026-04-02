@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.nestorian87.eter.BuildConfig
 import com.nestorian87.eter.R
 import com.nestorian87.eter.ui.components.FormScreenScaffold
 import com.nestorian87.eter.ui.components.GoogleAuthButton
@@ -45,8 +46,10 @@ import com.nestorian87.eter.ui.components.PrimaryActionButton
 import com.nestorian87.eter.ui.components.TextAction
 import com.nestorian87.eter.ui.components.UnderlinedTextField
 import com.nestorian87.eter.ui.screens.auth.AuthInputLimits
+import com.nestorian87.eter.ui.screens.auth.AuthSubmissionType
 import com.nestorian87.eter.ui.screens.auth.toMessageResId
 import com.nestorian87.eter.ui.components.AnimatedErrorMessage
+import com.nestorian87.eter.ui.screens.auth.google.rememberGoogleIdTokenRequester
 import com.nestorian87.eter.ui.theme.EterPreview
 import com.nestorian87.eter.ui.theme.EterScreenPreviews
 import com.nestorian87.eter.ui.theme.EterSpacing
@@ -56,6 +59,7 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     onLoginSuccess: () -> Unit = {},
     onNavigateToRegister: () -> Unit = {},
+    onNavigateToForgotPassword: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel(),
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -75,7 +79,10 @@ fun LoginScreen(
         onPasswordChanged = viewModel::onPasswordChanged,
         onPasswordVisibilityToggled = viewModel::onPasswordVisibilityToggled,
         onLoginClick = viewModel::onLoginClick,
+        onGoogleIdTokenReceived = viewModel::onGoogleIdTokenReceived,
+        onGoogleAuthFailed = viewModel::onGoogleAuthFailed,
         onNavigateToRegister = onNavigateToRegister,
+        onNavigateToForgotPassword = onNavigateToForgotPassword,
     )
 }
 
@@ -86,12 +93,21 @@ private fun LoginScreenContent(
     onPasswordChanged: (String) -> Unit,
     onPasswordVisibilityToggled: () -> Unit,
     onLoginClick: () -> Unit,
+    onGoogleIdTokenReceived: (String) -> Unit,
+    onGoogleAuthFailed: () -> Unit,
     onNavigateToRegister: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val passwordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val bottomBarContentInset = 148.dp
+    val isSubmitting = uiState.activeSubmission != null
+    val requestGoogleIdToken = rememberGoogleIdTokenRequester(
+        serverClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID,
+        onTokenReceived = onGoogleIdTokenReceived,
+        onFailure = onGoogleAuthFailed,
+    )
 
     FormScreenScaffold(
         modifier = modifier,
@@ -104,8 +120,8 @@ private fun LoginScreenContent(
         bottomBar = {
             PrimaryActionButton(
                 text = stringResource(R.string.auth_login_cta),
-                enabled = uiState.email.isNotBlank() && uiState.password.isNotBlank(),
-                isLoading = uiState.isSubmitting,
+                enabled = !isSubmitting && uiState.email.isNotBlank() && uiState.password.isNotBlank(),
+                isLoading = uiState.activeSubmission == AuthSubmissionType.CREDENTIALS,
                 onClick = onLoginClick,
             )
         },
@@ -182,7 +198,10 @@ private fun LoginScreenContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextAction(text = stringResource(R.string.auth_forgot_password_cta))
+            TextAction(
+                text = stringResource(R.string.auth_forgot_password_cta),
+                onClick = onNavigateToForgotPassword,
+            )
             TextAction(
                 text = stringResource(R.string.auth_create_account_cta),
                 onClick = onNavigateToRegister,
@@ -193,6 +212,9 @@ private fun LoginScreenContent(
         Spacer(modifier = Modifier.height(EterSpacing.xxxLarge))
         GoogleAuthButton(
             text = stringResource(R.string.auth_google_cta),
+            enabled = !isSubmitting,
+            isLoading = uiState.activeSubmission == AuthSubmissionType.GOOGLE,
+            onClick = requestGoogleIdToken,
         )
         Spacer(modifier = Modifier.height(EterSpacing.xxLarge))
     }
@@ -208,7 +230,10 @@ private fun LoginScreenPreview() {
             onPasswordChanged = {},
             onPasswordVisibilityToggled = {},
             onLoginClick = {},
+            onGoogleIdTokenReceived = {},
+            onGoogleAuthFailed = {},
             onNavigateToRegister = {},
+            onNavigateToForgotPassword = {},
         )
     }
 }

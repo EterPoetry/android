@@ -21,6 +21,11 @@ android {
         versionCode = 1
         versionName = "1.0"
         buildConfigField("String", "API_BASE_URL", "\"https://api.eter.pp.ua/\"")
+        buildConfigField(
+            "String",
+            "GOOGLE_WEB_CLIENT_ID",
+            "\"472602296154-kpjkmciub8ki15h035l1oeqhm154vk7e.apps.googleusercontent.com\""
+        )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -66,6 +71,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
@@ -98,6 +105,7 @@ dependencies {
     implementation(libs.io.coil.kt.coil.compose)
     implementation(platform(libs.com.google.firebase.bom))
     implementation(libs.com.google.firebase.messaging)
+    implementation(libs.com.google.android.libraries.identity.googleid)
     testImplementation(libs.junit5.api)
     testRuntimeOnly(libs.junit5.engine)
     testImplementation(libs.junit4)

@@ -1,5 +1,6 @@
 package com.nestorian87.eter.ui.screens.auth.register
 
+import com.nestorian87.eter.ui.screens.auth.AuthSubmissionType
 import com.nestorian87.eter.ui.screens.auth.AuthUiMessage
 
 data class RegisterUiState(
@@ -9,6 +10,6 @@ data class RegisterUiState(
     val confirmPassword: String = "",
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
-    val isSubmitting: Boolean = false,
+    val activeSubmission: AuthSubmissionType? = null,
     val errorMessage: AuthUiMessage? = null,
 )

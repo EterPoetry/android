@@ -19,6 +19,7 @@
     <string name="followers">Підписники</string>
     <string name="settings">Налаштування</string>
     <string name="manage_subscription">Управління підпискою</string>
+    <string name="navigation_back">Назад</string>
     <string name="profile_logout_cta">Вийти</string>
     <string name="profile_default_name">Користувач Eter</string>
     <string name="profile_default_email">Пошта недоступна</string>
@@ -35,12 +36,19 @@
     <string name="auth_login_short_cta">Увійти</string>
     <string name="auth_register_cta">Зареєструватися</string>
     <string name="auth_forgot_password_cta">Забули пароль?</string>
+    <string name="auth_forgot_password_title">Відновлення паролю</string>
+    <string name="auth_forgot_password_description">Введіть вашу електронну пошту, і ми надішлемо вам інструкції для скидання паролю.</string>
+    <string name="auth_forgot_password_send_cta">Надіслати інструкції</string>
+    <string name="auth_forgot_password_sent_snackbar">Інструкції надіслано на %1$s</string>
+    <string name="auth_forgot_password_cancel_cta">Скасувати</string>
     <string name="auth_create_account_cta">Створити акаунт</string>
     <string name="auth_existing_account_prompt">Вже маєте акаунт?</string>
     <string name="auth_or">або</string>
     <string name="auth_google_cta">Увійти через Google</string>
+    <string name="auth_google_error">Не вдалося увійти через Google. Спробуйте ще раз.</string>
     <string name="auth_fill_credentials_error">Заповніть email і пароль</string>
     <string name="auth_register_fill_fields_error">Заповніть усі поля</string>
+    <string name="auth_forgot_password_fill_field_error">Введіть email-адресу</string>
     <string name="auth_invalid_email_error">Введіть коректну email-адресу</string>
     <string name="auth_password_too_short_error">Пароль має містити щонайменше 6 символів</string>
     <string name="auth_register_password_mismatch_error">Паролі не співпадають</string>

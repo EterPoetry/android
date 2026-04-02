@@ -6,8 +6,8 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.nestorian87.eter.ui.screens.auth.ForgotPasswordScreen
 import com.nestorian87.eter.ui.screens.auth.emailConfirmation.EmailConfirmationScreen
+import com.nestorian87.eter.ui.screens.auth.forgotPassword.ForgotPasswordScreen
 import com.nestorian87.eter.ui.screens.auth.login.LoginScreen
 import com.nestorian87.eter.ui.screens.auth.register.RegisterScreen
 import com.nestorian87.eter.ui.screens.create.LyricSyncScreen
@@ -43,6 +43,7 @@ fun EterNavigation(
                     modifier = modifier,
                     onLoginSuccess = navigationState::showMain,
                     onNavigateToRegister = { navigationState.navigate(RegisterKey) },
+                    onNavigateToForgotPassword = { navigationState.navigate(ForgotPasswordKey) },
                 )
             }
             entry<RegisterKey> {
@@ -56,7 +57,10 @@ fun EterNavigation(
                 EmailConfirmationScreen(modifier = modifier)
             }
             entry<ForgotPasswordKey> {
-                ForgotPasswordScreen(modifier = modifier)
+                ForgotPasswordScreen(
+                    modifier = modifier,
+                    onCancelClick = navigationState::pop,
+                )
             }
             entry<FeedKey> {
                 FeedScreen(modifier = modifier)

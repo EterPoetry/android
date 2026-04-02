@@ -9,6 +9,8 @@ interface AuthRepository {
 
     suspend fun login(email: String, password: String): AuthSession
 
+    suspend fun loginWithGoogle(idToken: String): AuthSession
+
     suspend fun register(name: String, email: String, password: String): AuthSession
 
     suspend fun getEmailVerificationStatus(): EmailVerificationStatus
@@ -16,6 +18,8 @@ interface AuthRepository {
     suspend fun requestEmailVerificationCode(): EmailVerificationStatus
 
     suspend fun verifyEmail(email: String, code: String)
+
+    suspend fun requestPasswordReset(email: String)
 
     suspend fun refreshCurrentUser(): AuthSession?
 

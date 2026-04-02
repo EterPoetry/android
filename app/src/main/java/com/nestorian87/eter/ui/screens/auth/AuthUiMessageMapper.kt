@@ -5,9 +5,12 @@ import com.nestorian87.eter.domain.model.AuthException
 
 fun AuthUiMessage.toMessageResId(): Int = when (this) {
     AuthUiMessage.Unexpected -> R.string.auth_unexpected_error
+    AuthUiMessage.GoogleAuthFailed -> R.string.auth_google_error
     is AuthUiMessage.Validation -> when (this) {
         AuthUiMessage.Validation.FILL_CREDENTIALS -> R.string.auth_fill_credentials_error
         AuthUiMessage.Validation.REGISTER_FILL_FIELDS -> R.string.auth_register_fill_fields_error
+        AuthUiMessage.Validation.FORGOT_PASSWORD_FILL_FIELD ->
+            R.string.auth_forgot_password_fill_field_error
         AuthUiMessage.Validation.INVALID_EMAIL -> R.string.auth_invalid_email_error
         AuthUiMessage.Validation.PASSWORD_TOO_SHORT -> R.string.auth_password_too_short_error
         AuthUiMessage.Validation.REGISTER_PASSWORD_MISMATCH ->
@@ -19,6 +22,7 @@ fun AuthUiMessage.toMessageResId(): Int = when (this) {
 
 fun AuthException.Reason.toMessageResId(): Int = when (this) {
     AuthException.Reason.INVALID_CREDENTIALS -> R.string.auth_invalid_credentials_error
+    AuthException.Reason.GOOGLE_AUTH_FAILED -> R.string.auth_google_error
     AuthException.Reason.INVALID_REGISTRATION_DATA -> R.string.auth_register_invalid_data_error
     AuthException.Reason.INVALID_VERIFICATION_CODE -> R.string.auth_email_verification_invalid_code
     AuthException.Reason.EMAIL_VERIFICATION_RATE_LIMIT ->

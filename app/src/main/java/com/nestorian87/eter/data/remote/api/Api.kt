@@ -3,6 +3,8 @@ package com.nestorian87.eter.data.remote.api
 import com.nestorian87.eter.data.remote.dto.AuthResponseDto
 import com.nestorian87.eter.data.remote.dto.EmailVerificationRequestDto
 import com.nestorian87.eter.data.remote.dto.EmailVerificationStatusDto
+import com.nestorian87.eter.data.remote.dto.ForgotPasswordRequestDto
+import com.nestorian87.eter.data.remote.dto.GoogleMobileAuthRequestDto
 import com.nestorian87.eter.data.remote.dto.LoginRequestDto
 import com.nestorian87.eter.data.remote.dto.ProfileMeDto
 import com.nestorian87.eter.data.remote.dto.RegisterRequestDto
@@ -26,6 +28,12 @@ interface Api {
     ): AuthResponseDto
 
     @NoAuth
+    @POST("auth/google/mobile")
+    suspend fun loginWithGoogle(
+        @Body request: GoogleMobileAuthRequestDto,
+    ): AuthResponseDto
+
+    @NoAuth
     @POST("auth/refresh")
     suspend fun refresh(): AuthResponseDto
 
@@ -39,6 +47,12 @@ interface Api {
     @POST("auth/email/verify")
     suspend fun verifyEmail(
         @Body request: EmailVerificationRequestDto,
+    )
+
+    @NoAuth
+    @POST("auth/password/forgot")
+    suspend fun requestPasswordReset(
+        @Body request: ForgotPasswordRequestDto,
     )
 
     @GET("profile/me")

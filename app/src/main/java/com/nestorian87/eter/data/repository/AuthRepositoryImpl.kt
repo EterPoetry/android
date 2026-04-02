@@ -7,20 +7,20 @@ import com.nestorian87.eter.data.remote.api.Api
 import com.nestorian87.eter.data.remote.auth.AuthCookieJar
 import com.nestorian87.eter.data.remote.auth.RefreshTokenCoordinator
 import com.nestorian87.eter.data.remote.dto.EmailVerificationRequestDto
+import com.nestorian87.eter.data.remote.dto.ForgotPasswordRequestDto
+import com.nestorian87.eter.data.remote.dto.GoogleMobileAuthRequestDto
 import com.nestorian87.eter.data.remote.dto.LoginRequestDto
 import com.nestorian87.eter.data.remote.dto.RegisterRequestDto
 import com.nestorian87.eter.domain.model.AuthException
 import com.nestorian87.eter.domain.model.AuthSession
 import com.nestorian87.eter.domain.model.EmailVerificationStatus
 import com.nestorian87.eter.domain.repository.AuthRepository
-import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
-import retrofit2.HttpException
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
@@ -49,20 +49,40 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun login(email: String, password: String): AuthSession {
         awaitInitialization()
-        val authSession = try {
+        val authSession = executeAuthRequest(
+            httpErrorMapper = { statusCode ->
+                when (statusCode) {
+                    400, 401 -> AuthException.Reason.INVALID_CREDENTIALS
+                    else -> AuthException.Reason.UNKNOWN
+                }
+            },
+        ) {
             api.login(
                 request = LoginRequestDto(
                     email = email.trim(),
                     password = password,
                 ),
             ).toDomain()
-        } catch (error: HttpException) {
-            throw when (error.code()) {
-                400, 401 -> AuthException(AuthException.Reason.INVALID_CREDENTIALS, error)
-                else -> AuthException(AuthException.Reason.UNKNOWN, error)
-            }
-        } catch (error: IOException) {
-            throw AuthException(AuthException.Reason.NETWORK, error)
+        }
+        sessionStore.saveSession(authSession)
+        return authSession
+    }
+
+    override suspend fun loginWithGoogle(idToken: String): AuthSession {
+        awaitInitialization()
+        val authSession = executeAuthRequest(
+            httpErrorMapper = { statusCode ->
+                when (statusCode) {
+                    400, 401 -> AuthException.Reason.GOOGLE_AUTH_FAILED
+                    else -> AuthException.Reason.UNKNOWN
+                }
+            },
+        ) {
+            api.loginWithGoogle(
+                request = GoogleMobileAuthRequestDto(
+                    idToken = idToken,
+                ),
+            ).toDomain()
         }
         sessionStore.saveSession(authSession)
         return authSession
@@ -70,7 +90,15 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun register(name: String, email: String, password: String): AuthSession {
         awaitInitialization()
-        val authSession = try {
+        val authSession = executeAuthRequest(
+            httpErrorMapper = { statusCode ->
+                when (statusCode) {
+                    409 -> AuthException.Reason.EMAIL_ALREADY_EXISTS
+                    400 -> AuthException.Reason.INVALID_REGISTRATION_DATA
+                    else -> AuthException.Reason.UNKNOWN
+                }
+            },
+        ) {
             api.register(
                 request = RegisterRequestDto(
                     name = name.trim(),
@@ -78,14 +106,6 @@ class AuthRepositoryImpl @Inject constructor(
                     password = password,
                 ),
             ).toDomain()
-        } catch (error: HttpException) {
-            throw when (error.code()) {
-                409 -> AuthException(AuthException.Reason.EMAIL_ALREADY_EXISTS, error)
-                400 -> AuthException(AuthException.Reason.INVALID_REGISTRATION_DATA, error)
-                else -> AuthException(AuthException.Reason.UNKNOWN, error)
-            }
-        } catch (error: IOException) {
-            throw AuthException(AuthException.Reason.NETWORK, error)
         }
         sessionStore.saveSession(authSession)
         return authSession
@@ -93,64 +113,67 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun getEmailVerificationStatus(): EmailVerificationStatus {
         awaitInitialization()
-        return try {
+        return executeAuthRequest {
             EmailVerificationStatus(
                 remainingMs = api.getEmailVerificationStatus().remainingMs,
             )
-        } catch (error: IOException) {
-            throw AuthException(AuthException.Reason.NETWORK, error)
-        } catch (error: HttpException) {
-            throw AuthException(AuthException.Reason.UNKNOWN, error)
         }
     }
 
     override suspend fun requestEmailVerificationCode(): EmailVerificationStatus {
         awaitInitialization()
-        try {
+        return executeAuthRequest(
+            httpErrorMapper = { statusCode ->
+                when (statusCode) {
+                    429 -> AuthException.Reason.EMAIL_VERIFICATION_RATE_LIMIT
+                    else -> AuthException.Reason.UNKNOWN
+                }
+            },
+        ) {
             api.requestEmailVerificationCode()
-            return EmailVerificationStatus(
+            EmailVerificationStatus(
                 remainingMs = api.getEmailVerificationStatus().remainingMs,
             )
-        } catch (error: IOException) {
-            throw AuthException(AuthException.Reason.NETWORK, error)
-        } catch (error: HttpException) {
-            throw when (error.code()) {
-                429 -> AuthException(AuthException.Reason.EMAIL_VERIFICATION_RATE_LIMIT, error)
-                else -> AuthException(AuthException.Reason.UNKNOWN, error)
-            }
         }
     }
 
     override suspend fun verifyEmail(email: String, code: String) {
         awaitInitialization()
-        try {
+        executeAuthRequest(
+            httpErrorMapper = { statusCode ->
+                when (statusCode) {
+                    400, 401 -> AuthException.Reason.INVALID_VERIFICATION_CODE
+                    else -> AuthException.Reason.UNKNOWN
+                }
+            },
+        ) {
             api.verifyEmail(
                 request = EmailVerificationRequestDto(
                     email = email.trim(),
                     code = code,
                 ),
             )
-        } catch (error: HttpException) {
-            throw when (error.code()) {
-                400, 401 -> AuthException(AuthException.Reason.INVALID_VERIFICATION_CODE, error)
-                else -> AuthException(AuthException.Reason.UNKNOWN, error)
-            }
-        } catch (error: IOException) {
-            throw AuthException(AuthException.Reason.NETWORK, error)
         }
         refreshCurrentUser()
+    }
+
+    override suspend fun requestPasswordReset(email: String) {
+        awaitInitialization()
+        executeAuthRequest {
+            api.requestPasswordReset(
+                request = ForgotPasswordRequestDto(
+                    email = email.trim(),
+                ),
+            )
+        }
     }
 
     override suspend fun refreshCurrentUser(): AuthSession? {
         awaitInitialization()
         val currentSession = session.value ?: return null
 
-        val updatedUser = try {
+        val updatedUser = executeAuthRequest {
             api.getProfileMe().toAuthUser()
-        } catch (error: IOException) {
-            throw AuthException(AuthException.Reason.NETWORK, error)
-        } catch (error: HttpException) {
-            throw AuthException(AuthException.Reason.UNKNOWN, error)
         }
 
         val updatedSession = currentSession.copy(user = updatedUser)
