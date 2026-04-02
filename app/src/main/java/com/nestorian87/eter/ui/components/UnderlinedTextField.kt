@@ -30,6 +30,7 @@ fun UnderlinedTextField(
     label: String,
     placeholder: String,
     modifier: Modifier = Modifier,
+    maxLength: Int? = null,
     trailing: (@Composable () -> Unit)? = null,
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     singleLine: Boolean = true,
@@ -50,7 +51,9 @@ fun UnderlinedTextField(
         ) {
             BasicTextField(
                 value = value,
-                onValueChange = onValueChange,
+                onValueChange = { updatedValue ->
+                    onValueChange(updatedValue.take(maxLength ?: Int.MAX_VALUE))
+                },
                 modifier = Modifier.weight(1f),
                 singleLine = singleLine,
                 visualTransformation = visualTransformation,

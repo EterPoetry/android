@@ -31,9 +31,13 @@ class AuthCookieJar @Inject constructor(
     private var isInitialized = false
 
     suspend fun initialize() {
-        if (isInitialized) return
+        if (isInitialized) {
+            return
+        }
         initializationMutex.withLock {
-            if (isInitialized) return
+            if (isInitialized) {
+                return
+            }
             val restoredCookies = dataStore.data
                 .catch { emit(emptyPreferences()) }
                 .first()[CookieKey]

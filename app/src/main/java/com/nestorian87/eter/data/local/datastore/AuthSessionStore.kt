@@ -34,9 +34,13 @@ class AuthSessionStore @Inject constructor(
         get() = sessionState.value?.accessToken
 
     suspend fun initialize() {
-        if (isInitialized) return
+        if (isInitialized) {
+            return
+        }
         initializationMutex.withLock {
-            if (isInitialized) return
+            if (isInitialized) {
+                return
+            }
             sessionState.value = readPersistedSession()
             isInitialized = true
         }

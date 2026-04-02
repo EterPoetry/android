@@ -8,8 +8,8 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.nestorian87.eter.ui.screens.auth.EmailConfirmationScreen
 import com.nestorian87.eter.ui.screens.auth.ForgotPasswordScreen
-import com.nestorian87.eter.ui.screens.auth.RegisterScreen
 import com.nestorian87.eter.ui.screens.auth.login.LoginScreen
+import com.nestorian87.eter.ui.screens.auth.register.RegisterScreen
 import com.nestorian87.eter.ui.screens.create.LyricSyncScreen
 import com.nestorian87.eter.ui.screens.create.PublishScreen
 import com.nestorian87.eter.ui.screens.create.RecordAudioScreen
@@ -42,10 +42,15 @@ fun EterNavigation(
                 LoginScreen(
                     modifier = modifier,
                     onLoginSuccess = navigationState::showMain,
+                    onNavigateToRegister = { navigationState.navigate(RegisterKey) },
                 )
             }
             entry<RegisterKey> {
-                RegisterScreen(modifier = modifier)
+                RegisterScreen(
+                    modifier = modifier,
+                    onRegisterSuccess = navigationState::showMain,
+                    onNavigateToLogin = { navigationState.pop() },
+                )
             }
             entry<EmailConfirmationKey> {
                 EmailConfirmationScreen(modifier = modifier)

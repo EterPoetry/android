@@ -54,7 +54,7 @@ fun GoogleAuthButton(
         Text(
             text = text,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
-            color = MaterialTheme.colorScheme.tertiary,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
     }

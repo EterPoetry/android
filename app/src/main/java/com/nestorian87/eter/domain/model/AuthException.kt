@@ -7,6 +7,8 @@ class AuthException(
 
     enum class Reason {
         INVALID_CREDENTIALS,
+        INVALID_REGISTRATION_DATA,
+        EMAIL_ALREADY_EXISTS,
         NETWORK,
         UNKNOWN,
     }

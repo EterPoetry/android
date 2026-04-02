@@ -6,6 +6,7 @@ import com.nestorian87.eter.data.remote.api.Api
 import com.nestorian87.eter.data.remote.auth.AuthCookieJar
 import com.nestorian87.eter.data.remote.auth.RefreshTokenCoordinator
 import com.nestorian87.eter.data.remote.dto.LoginRequestDto
+import com.nestorian87.eter.data.remote.dto.RegisterRequestDto
 import com.nestorian87.eter.domain.model.AuthException
 import com.nestorian87.eter.domain.model.AuthSession
 import com.nestorian87.eter.domain.repository.AuthRepository
@@ -55,6 +56,29 @@ class AuthRepositoryImpl @Inject constructor(
         } catch (error: HttpException) {
             throw when (error.code()) {
                 400, 401 -> AuthException(AuthException.Reason.INVALID_CREDENTIALS, error)
+                else -> AuthException(AuthException.Reason.UNKNOWN, error)
+            }
+        } catch (error: IOException) {
+            throw AuthException(AuthException.Reason.NETWORK, error)
+        }
+        sessionStore.saveSession(authSession)
+        return authSession
+    }
+
+    override suspend fun register(name: String, email: String, password: String): AuthSession {
+        awaitInitialization()
+        val authSession = try {
+            api.register(
+                request = RegisterRequestDto(
+                    name = name.trim(),
+                    email = email.trim(),
+                    password = password,
+                ),
+            ).toDomain()
+        } catch (error: HttpException) {
+            throw when (error.code()) {
+                409 -> AuthException(AuthException.Reason.EMAIL_ALREADY_EXISTS, error)
+                400 -> AuthException(AuthException.Reason.INVALID_REGISTRATION_DATA, error)
                 else -> AuthException(AuthException.Reason.UNKNOWN, error)
             }
         } catch (error: IOException) {

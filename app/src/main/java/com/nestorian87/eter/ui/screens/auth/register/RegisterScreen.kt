@@ -1,5 +1,7 @@
-package com.nestorian87.eter.ui.screens.auth.login
+package com.nestorian87.eter.ui.screens.auth.register
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,8 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -44,51 +44,59 @@ import com.nestorian87.eter.ui.components.LabeledDivider
 import com.nestorian87.eter.ui.components.PrimaryActionButton
 import com.nestorian87.eter.ui.components.TextAction
 import com.nestorian87.eter.ui.components.UnderlinedTextField
-import com.nestorian87.eter.ui.screens.auth.AuthInputLimits
 import com.nestorian87.eter.ui.components.AnimatedErrorMessage
+import com.nestorian87.eter.ui.screens.auth.AuthInputLimits
 import com.nestorian87.eter.ui.theme.EterPreview
 import com.nestorian87.eter.ui.theme.EterScreenPreviews
 import com.nestorian87.eter.ui.theme.EterSpacing
 
 @Composable
-fun LoginScreen(
+fun RegisterScreen(
     modifier: Modifier = Modifier,
-    onLoginSuccess: () -> Unit = {},
-    onNavigateToRegister: () -> Unit = {},
-    viewModel: LoginViewModel = hiltViewModel(),
+    onRegisterSuccess: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
+    viewModel: RegisterViewModel = hiltViewModel(),
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
 
-    LaunchedEffect(onLoginSuccess) {
+    LaunchedEffect(onRegisterSuccess) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                LoginEffect.NavigateToMain -> onLoginSuccess()
+                RegisterEffect.NavigateToMain -> onRegisterSuccess()
             }
         }
     }
 
-    LoginScreenContent(
+    RegisterScreenContent(
         modifier = modifier.fillMaxSize(),
         uiState = uiState,
+        onNameChanged = viewModel::onNameChanged,
         onEmailChanged = viewModel::onEmailChanged,
         onPasswordChanged = viewModel::onPasswordChanged,
+        onConfirmPasswordChanged = viewModel::onConfirmPasswordChanged,
         onPasswordVisibilityToggled = viewModel::onPasswordVisibilityToggled,
-        onLoginClick = viewModel::onLoginClick,
-        onNavigateToRegister = onNavigateToRegister,
+        onConfirmPasswordVisibilityToggled = viewModel::onConfirmPasswordVisibilityToggled,
+        onRegisterClick = viewModel::onRegisterClick,
+        onNavigateToLogin = onNavigateToLogin,
     )
 }
 
 @Composable
-private fun LoginScreenContent(
-    uiState: LoginUiState,
+private fun RegisterScreenContent(
+    uiState: RegisterUiState,
+    onNameChanged: (String) -> Unit,
     onEmailChanged: (String) -> Unit,
     onPasswordChanged: (String) -> Unit,
+    onConfirmPasswordChanged: (String) -> Unit,
     onPasswordVisibilityToggled: () -> Unit,
-    onLoginClick: () -> Unit,
-    onNavigateToRegister: () -> Unit,
+    onConfirmPasswordVisibilityToggled: () -> Unit,
+    onRegisterClick: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val emailFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }
+    val confirmPasswordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val bottomBarContentInset = 148.dp
 
@@ -102,10 +110,13 @@ private fun LoginScreenContent(
         ),
         bottomBar = {
             PrimaryActionButton(
-                text = stringResource(R.string.auth_login_cta),
-                enabled = uiState.email.isNotBlank() && uiState.password.isNotBlank(),
+                text = stringResource(R.string.auth_register_cta),
+                enabled = uiState.name.isNotBlank() &&
+                    uiState.email.isNotBlank() &&
+                    uiState.password.isNotBlank() &&
+                    uiState.confirmPassword.isNotBlank(),
                 isLoading = uiState.isSubmitting,
-                onClick = onLoginClick,
+                onClick = onRegisterClick,
             )
         },
     ) {
@@ -122,11 +133,27 @@ private fun LoginScreenContent(
         }
         Spacer(modifier = Modifier.height(EterSpacing.hero))
         UnderlinedTextField(
+            value = uiState.name,
+            onValueChange = onNameChanged,
+            label = stringResource(R.string.auth_name_label),
+            placeholder = stringResource(R.string.auth_name_placeholder),
+            maxLength = AuthInputLimits.MAX_NAME_LENGTH,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next,
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { emailFocusRequester.requestFocus() },
+            ),
+        )
+        Spacer(modifier = Modifier.height(EterSpacing.section))
+        UnderlinedTextField(
             value = uiState.email,
             onValueChange = onEmailChanged,
             label = stringResource(R.string.auth_email_label),
             placeholder = stringResource(R.string.auth_email_placeholder),
             maxLength = AuthInputLimits.MAX_EMAIL_LENGTH,
+            modifier = Modifier.focusRequester(emailFocusRequester),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next,
@@ -144,21 +171,39 @@ private fun LoginScreenContent(
             maxLength = AuthInputLimits.MAX_PASSWORD_LENGTH,
             modifier = Modifier.focusRequester(passwordFocusRequester),
             trailing = {
-                Icon(
-                    imageVector = if (uiState.isPasswordVisible) {
-                        Icons.Outlined.Visibility
-                    } else {
-                        Icons.Outlined.VisibilityOff
-                    },
-                    contentDescription = stringResource(R.string.auth_toggle_password_visibility),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clickable(onClick = onPasswordVisibilityToggled),
+                PasswordVisibilityIcon(
+                    isVisible = uiState.isPasswordVisible,
+                    onClick = onPasswordVisibilityToggled,
                 )
             },
-            textStyle = MaterialTheme.typography.bodyLarge,
             visualTransformation = if (uiState.isPasswordVisible) {
+                VisualTransformation.None
+            } else {
+                PasswordVisualTransformation()
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Next,
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { confirmPasswordFocusRequester.requestFocus() },
+            ),
+        )
+        Spacer(modifier = Modifier.height(EterSpacing.section))
+        UnderlinedTextField(
+            value = uiState.confirmPassword,
+            onValueChange = onConfirmPasswordChanged,
+            label = stringResource(R.string.auth_confirm_password_label),
+            placeholder = stringResource(R.string.auth_confirm_password_placeholder),
+            maxLength = AuthInputLimits.MAX_PASSWORD_LENGTH,
+            modifier = Modifier.focusRequester(confirmPasswordFocusRequester),
+            trailing = {
+                PasswordVisibilityIcon(
+                    isVisible = uiState.isConfirmPasswordVisible,
+                    onClick = onConfirmPasswordVisibilityToggled,
+                )
+            },
+            visualTransformation = if (uiState.isConfirmPasswordVisible) {
                 VisualTransformation.None
             } else {
                 PasswordVisualTransformation()
@@ -170,21 +215,26 @@ private fun LoginScreenContent(
             keyboardActions = KeyboardActions(
                 onDone = {
                     focusManager.clearFocus()
-                    onLoginClick()
+                    onRegisterClick()
                 },
             ),
         )
         AnimatedErrorMessage(messageResId = uiState.errorMessageResId)
-        Spacer(modifier = Modifier.height(EterSpacing.large))
+        Spacer(modifier = Modifier.height(EterSpacing.xLarge))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextAction(text = stringResource(R.string.auth_forgot_password_cta))
+            Text(
+                text = stringResource(R.string.auth_existing_account_prompt),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.size(EterSpacing.xSmall))
             TextAction(
-                text = stringResource(R.string.auth_create_account_cta),
-                onClick = onNavigateToRegister,
+                text = stringResource(R.string.auth_login_short_cta),
+                onClick = onNavigateToLogin,
             )
         }
         Spacer(modifier = Modifier.height(EterSpacing.screen))
@@ -197,17 +247,40 @@ private fun LoginScreenContent(
     }
 }
 
+@Composable
+private fun PasswordVisibilityIcon(
+    isVisible: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Icon(
+        imageVector = if (isVisible) {
+            Icons.Outlined.Visibility
+        } else {
+            Icons.Outlined.VisibilityOff
+        },
+        contentDescription = stringResource(R.string.auth_toggle_password_visibility),
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier
+            .size(22.dp)
+            .clickable(onClick = onClick),
+    )
+}
+
 @EterScreenPreviews
 @Composable
-private fun LoginScreenPreview() {
+private fun RegisterScreenPreview() {
     EterPreview {
-        LoginScreenContent(
-            uiState = LoginUiState(),
+        RegisterScreenContent(
+            uiState = RegisterUiState(),
+            onNameChanged = {},
             onEmailChanged = {},
             onPasswordChanged = {},
+            onConfirmPasswordChanged = {},
             onPasswordVisibilityToggled = {},
-            onLoginClick = {},
-            onNavigateToRegister = {},
+            onConfirmPasswordVisibilityToggled = {},
+            onRegisterClick = {},
+            onNavigateToLogin = {},
         )
     }
 }
