@@ -46,6 +46,7 @@ import com.nestorian87.eter.ui.components.TextAction
 import com.nestorian87.eter.ui.components.UnderlinedTextField
 import com.nestorian87.eter.ui.components.AnimatedErrorMessage
 import com.nestorian87.eter.ui.screens.auth.AuthInputLimits
+import com.nestorian87.eter.ui.screens.auth.toMessageResId
 import com.nestorian87.eter.ui.theme.EterPreview
 import com.nestorian87.eter.ui.theme.EterScreenPreviews
 import com.nestorian87.eter.ui.theme.EterSpacing
@@ -219,7 +220,7 @@ private fun RegisterScreenContent(
                 },
             ),
         )
-        AnimatedErrorMessage(messageResId = uiState.errorMessageResId)
+        AnimatedErrorMessage(messageResId = uiState.errorMessage?.toMessageResId())
         Spacer(modifier = Modifier.height(EterSpacing.xLarge))
         Row(
             modifier = Modifier.fillMaxWidth(),

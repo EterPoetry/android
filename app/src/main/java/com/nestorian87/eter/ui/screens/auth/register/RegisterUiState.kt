@@ -1,6 +1,6 @@
 package com.nestorian87.eter.ui.screens.auth.register
 
-import androidx.annotation.StringRes
+import com.nestorian87.eter.ui.screens.auth.AuthUiMessage
 
 data class RegisterUiState(
     val name: String = "",
@@ -10,5 +10,5 @@ data class RegisterUiState(
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
     val isSubmitting: Boolean = false,
-    @param:StringRes val errorMessageResId: Int? = null,
+    val errorMessage: AuthUiMessage? = null,
 )

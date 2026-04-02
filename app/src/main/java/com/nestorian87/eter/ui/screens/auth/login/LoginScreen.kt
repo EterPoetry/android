@@ -45,6 +45,7 @@ import com.nestorian87.eter.ui.components.PrimaryActionButton
 import com.nestorian87.eter.ui.components.TextAction
 import com.nestorian87.eter.ui.components.UnderlinedTextField
 import com.nestorian87.eter.ui.screens.auth.AuthInputLimits
+import com.nestorian87.eter.ui.screens.auth.toMessageResId
 import com.nestorian87.eter.ui.components.AnimatedErrorMessage
 import com.nestorian87.eter.ui.theme.EterPreview
 import com.nestorian87.eter.ui.theme.EterScreenPreviews
@@ -174,7 +175,7 @@ private fun LoginScreenContent(
                 },
             ),
         )
-        AnimatedErrorMessage(messageResId = uiState.errorMessageResId)
+        AnimatedErrorMessage(messageResId = uiState.errorMessage?.toMessageResId())
         Spacer(modifier = Modifier.height(EterSpacing.large))
         Row(
             modifier = Modifier.fillMaxWidth(),

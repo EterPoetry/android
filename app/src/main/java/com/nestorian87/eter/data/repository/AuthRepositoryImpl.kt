@@ -1,14 +1,17 @@
 package com.nestorian87.eter.data.repository
 
 import com.nestorian87.eter.data.local.datastore.AuthSessionStore
+import com.nestorian87.eter.data.mapper.toAuthUser
 import com.nestorian87.eter.data.mapper.toDomain
 import com.nestorian87.eter.data.remote.api.Api
 import com.nestorian87.eter.data.remote.auth.AuthCookieJar
 import com.nestorian87.eter.data.remote.auth.RefreshTokenCoordinator
+import com.nestorian87.eter.data.remote.dto.EmailVerificationRequestDto
 import com.nestorian87.eter.data.remote.dto.LoginRequestDto
 import com.nestorian87.eter.data.remote.dto.RegisterRequestDto
 import com.nestorian87.eter.domain.model.AuthException
 import com.nestorian87.eter.domain.model.AuthSession
+import com.nestorian87.eter.domain.model.EmailVerificationStatus
 import com.nestorian87.eter.domain.repository.AuthRepository
 import java.io.IOException
 import javax.inject.Inject
@@ -86,6 +89,73 @@ class AuthRepositoryImpl @Inject constructor(
         }
         sessionStore.saveSession(authSession)
         return authSession
+    }
+
+    override suspend fun getEmailVerificationStatus(): EmailVerificationStatus {
+        awaitInitialization()
+        return try {
+            EmailVerificationStatus(
+                remainingMs = api.getEmailVerificationStatus().remainingMs,
+            )
+        } catch (error: IOException) {
+            throw AuthException(AuthException.Reason.NETWORK, error)
+        } catch (error: HttpException) {
+            throw AuthException(AuthException.Reason.UNKNOWN, error)
+        }
+    }
+
+    override suspend fun requestEmailVerificationCode(): EmailVerificationStatus {
+        awaitInitialization()
+        try {
+            api.requestEmailVerificationCode()
+            return EmailVerificationStatus(
+                remainingMs = api.getEmailVerificationStatus().remainingMs,
+            )
+        } catch (error: IOException) {
+            throw AuthException(AuthException.Reason.NETWORK, error)
+        } catch (error: HttpException) {
+            throw when (error.code()) {
+                429 -> AuthException(AuthException.Reason.EMAIL_VERIFICATION_RATE_LIMIT, error)
+                else -> AuthException(AuthException.Reason.UNKNOWN, error)
+            }
+        }
+    }
+
+    override suspend fun verifyEmail(email: String, code: String) {
+        awaitInitialization()
+        try {
+            api.verifyEmail(
+                request = EmailVerificationRequestDto(
+                    email = email.trim(),
+                    code = code,
+                ),
+            )
+        } catch (error: HttpException) {
+            throw when (error.code()) {
+                400, 401 -> AuthException(AuthException.Reason.INVALID_VERIFICATION_CODE, error)
+                else -> AuthException(AuthException.Reason.UNKNOWN, error)
+            }
+        } catch (error: IOException) {
+            throw AuthException(AuthException.Reason.NETWORK, error)
+        }
+        refreshCurrentUser()
+    }
+
+    override suspend fun refreshCurrentUser(): AuthSession? {
+        awaitInitialization()
+        val currentSession = session.value ?: return null
+
+        val updatedUser = try {
+            api.getProfileMe().toAuthUser()
+        } catch (error: IOException) {
+            throw AuthException(AuthException.Reason.NETWORK, error)
+        } catch (error: HttpException) {
+            throw AuthException(AuthException.Reason.UNKNOWN, error)
+        }
+
+        val updatedSession = currentSession.copy(user = updatedUser)
+        sessionStore.saveSession(updatedSession)
+        return updatedSession
     }
 
     override suspend fun logout() {

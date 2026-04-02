@@ -2,11 +2,11 @@ package com.nestorian87.eter.ui.screens.auth.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nestorian87.eter.R
-import com.nestorian87.eter.domain.model.AuthException
 import com.nestorian87.eter.domain.repository.AuthRepository
 import com.nestorian87.eter.ui.screens.auth.AuthInputLimits
+import com.nestorian87.eter.ui.screens.auth.AuthUiMessage
 import com.nestorian87.eter.ui.screens.auth.isValidEmail
+import com.nestorian87.eter.ui.screens.auth.toAuthUiMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
@@ -31,7 +31,7 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { current ->
             current.copy(
                 name = value,
-                errorMessageResId = null,
+                errorMessage = null,
             )
         }
     }
@@ -40,7 +40,7 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { current ->
             current.copy(
                 email = value,
-                errorMessageResId = null,
+                errorMessage = null,
             )
         }
     }
@@ -49,7 +49,7 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { current ->
             current.copy(
                 password = value,
-                errorMessageResId = null,
+                errorMessage = null,
             )
         }
     }
@@ -58,7 +58,7 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { current ->
             current.copy(
                 confirmPassword = value,
-                errorMessageResId = null,
+                errorMessage = null,
             )
         }
     }
@@ -86,24 +86,24 @@ class RegisterViewModel @Inject constructor(
         val password = snapshot.password
         val confirmPassword = snapshot.confirmPassword
 
-        val errorMessageResId = when {
+        val errorMessage = when {
             name.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank() ->
-                R.string.auth_register_fill_fields_error
-            !isValidEmail(email) -> R.string.auth_invalid_email_error
+                AuthUiMessage.Validation.REGISTER_FILL_FIELDS
+            !isValidEmail(email) -> AuthUiMessage.Validation.INVALID_EMAIL
             password.length < AuthInputLimits.MIN_PASSWORD_LENGTH ->
-                R.string.auth_password_too_short_error
+                AuthUiMessage.Validation.PASSWORD_TOO_SHORT
             password != confirmPassword ->
-                R.string.auth_register_password_mismatch_error
+                AuthUiMessage.Validation.REGISTER_PASSWORD_MISMATCH
             else -> null
         }
 
-        if (errorMessageResId != null) {
-            _uiState.update { it.copy(errorMessageResId = errorMessageResId) }
+        if (errorMessage != null) {
+            _uiState.update { it.copy(errorMessage = errorMessage) }
             return
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, errorMessageResId = null) }
+            _uiState.update { it.copy(isSubmitting = true, errorMessage = null) }
             runCatching {
                 authRepository.register(
                     name = name,
@@ -111,29 +111,16 @@ class RegisterViewModel @Inject constructor(
                     password = password,
                 )
             }.onSuccess {
-                _uiState.update { it.copy(isSubmitting = false, errorMessageResId = null) }
+                _uiState.update { it.copy(isSubmitting = false, errorMessage = null) }
                 effectChannel.send(RegisterEffect.NavigateToMain)
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(
                         isSubmitting = false,
-                        errorMessageResId = error.toUserMessageResId(),
+                        errorMessage = error.toAuthUiMessage(),
                     )
                 }
             }
         }
     }
-}
-
-private fun Throwable.toUserMessageResId(): Int = when (this) {
-    is AuthException -> when (reason) {
-        AuthException.Reason.INVALID_CREDENTIALS -> R.string.auth_invalid_credentials_error
-        AuthException.Reason.INVALID_REGISTRATION_DATA ->
-            R.string.auth_register_invalid_data_error
-        AuthException.Reason.EMAIL_ALREADY_EXISTS -> R.string.auth_register_email_exists_error
-        AuthException.Reason.NETWORK -> R.string.auth_network_error
-        AuthException.Reason.UNKNOWN -> R.string.auth_unexpected_error
-    }
-
-    else -> R.string.auth_unexpected_error
 }

@@ -17,7 +17,7 @@ class RefreshTokenAuthenticator @Inject constructor(
         route: Route?,
         response: Response,
     ): Request? {
-        if (responseCount(response) >= MAX_AUTH_RETRIES) {
+        if (responseCount(response) > MAX_AUTH_RETRIES) {
             return null
         }
 

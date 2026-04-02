@@ -23,15 +23,20 @@ class AppSessionViewModel @Inject constructor(
             authRepository.session.collectLatest { session ->
                 _uiState.value = _uiState.value.copy(
                     isAuthenticated = session != null,
+                    isEmailVerified = session?.user?.isEmailVerified ?: false,
                 )
             }
         }
 
         viewModelScope.launch {
             val restored = authRepository.restoreSession()
+            if (restored || authRepository.session.value != null) {
+                runCatching { authRepository.refreshCurrentUser() }
+            }
             _uiState.value = _uiState.value.copy(
                 isCheckingSession = false,
                 isAuthenticated = restored || authRepository.session.value != null,
+                isEmailVerified = authRepository.session.value?.user?.isEmailVerified ?: false,
             )
         }
     }

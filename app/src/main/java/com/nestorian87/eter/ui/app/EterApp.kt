@@ -12,6 +12,7 @@ import com.nestorian87.eter.ui.components.MiniPlayer
 import com.nestorian87.eter.ui.navigation.BottomNavBar
 import com.nestorian87.eter.ui.navigation.EterNavigation
 import com.nestorian87.eter.ui.navigation.rememberEterNavigationState
+import com.nestorian87.eter.ui.screens.auth.emailConfirmation.EmailConfirmationScreen
 
 @Composable
 fun EterApp(
@@ -32,6 +33,11 @@ fun EterApp(
         } else {
             navigationState.showAuth()
         }
+    }
+
+    if (sessionState.isAuthenticated && !sessionState.isEmailVerified) {
+        EmailConfirmationScreen()
+        return
     }
 
     Scaffold(

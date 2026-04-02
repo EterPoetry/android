@@ -3,10 +3,11 @@ package com.nestorian87.eter.ui.screens.auth.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nestorian87.eter.R
-import com.nestorian87.eter.domain.model.AuthException
 import com.nestorian87.eter.domain.repository.AuthRepository
 import com.nestorian87.eter.ui.screens.auth.AuthInputLimits
+import com.nestorian87.eter.ui.screens.auth.AuthUiMessage
 import com.nestorian87.eter.ui.screens.auth.isValidEmail
+import com.nestorian87.eter.ui.screens.auth.toAuthUiMessage
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +32,7 @@ class LoginViewModel @Inject constructor(
         _uiState.update { current ->
             current.copy(
                 email = value,
-                errorMessageResId = null,
+                errorMessage = null,
             )
         }
     }
@@ -40,7 +41,7 @@ class LoginViewModel @Inject constructor(
         _uiState.update { current ->
             current.copy(
                 password = value,
-                errorMessageResId = null,
+                errorMessage = null,
             )
         }
     }
@@ -59,45 +60,34 @@ class LoginViewModel @Inject constructor(
 
         val email = snapshot.email.trim()
         val password = snapshot.password
-        val errorMessageResId = when {
-            email.isBlank() || password.isBlank() -> R.string.auth_fill_credentials_error
-            !isValidEmail(email) -> R.string.auth_invalid_email_error
+        val errorMessage = when {
+            email.isBlank() || password.isBlank() ->
+                AuthUiMessage.Validation.FILL_CREDENTIALS
+            !isValidEmail(email) -> AuthUiMessage.Validation.INVALID_EMAIL
             password.length < AuthInputLimits.MIN_PASSWORD_LENGTH ->
-                R.string.auth_password_too_short_error
+                AuthUiMessage.Validation.PASSWORD_TOO_SHORT
             else -> null
         }
-        if (errorMessageResId != null) {
-            _uiState.update { it.copy(errorMessageResId = errorMessageResId) }
+        if (errorMessage != null) {
+            _uiState.update { it.copy(errorMessage = errorMessage) }
             return
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, errorMessageResId = null) }
+            _uiState.update { it.copy(isSubmitting = true, errorMessage = null) }
             runCatching {
                 authRepository.login(email = email, password = password)
             }.onSuccess {
-                _uiState.update { it.copy(isSubmitting = false, errorMessageResId = null) }
+                _uiState.update { it.copy(isSubmitting = false, errorMessage = null) }
                 effectChannel.send(LoginEffect.NavigateToMain)
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(
                         isSubmitting = false,
-                        errorMessageResId = error.toUserMessageResId(),
+                        errorMessage = error.toAuthUiMessage(),
                     )
                 }
             }
         }
     }
-}
-
-private fun Throwable.toUserMessageResId(): Int = when (this) {
-    is AuthException -> when (reason) {
-        AuthException.Reason.INVALID_CREDENTIALS -> R.string.auth_invalid_credentials_error
-        AuthException.Reason.INVALID_REGISTRATION_DATA -> R.string.auth_unexpected_error
-        AuthException.Reason.EMAIL_ALREADY_EXISTS -> R.string.auth_unexpected_error
-        AuthException.Reason.NETWORK -> R.string.auth_network_error
-        AuthException.Reason.UNKNOWN -> R.string.auth_unexpected_error
-    }
-
-    else -> R.string.auth_unexpected_error
 }

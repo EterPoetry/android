@@ -47,6 +47,15 @@
     <string name="auth_register_invalid_data_error">Check your registration details and try again</string>
     <string name="auth_register_email_exists_error">An account with this email already exists</string>
     <string name="auth_invalid_credentials_error">Incorrect email or password</string>
+    <string name="auth_email_verification_title">Verification</string>
+    <string name="auth_email_verification_description">To unlock all features, you need to verify your email address %1$s.</string>
+    <string name="auth_email_verification_sent_description">We sent a code to %1$s. Enter it below to activate your account.</string>
+    <string name="auth_email_verification_send_code">Send code</string>
+    <string name="auth_email_verification_resend_code">Resend code</string>
+    <string name="auth_email_verification_resend_in">Resend request in %1$s</string>
+    <string name="auth_email_verification_logout_cta">Log out</string>
+    <string name="auth_email_verification_invalid_code">Invalid verification code</string>
+    <string name="auth_email_verification_rate_limit_error">Too many code requests. Please wait a bit and try again.</string>
     <string name="auth_generic_error">Could not sign in. Try again.</string>
     <string name="auth_network_error">Network error. Check your connection.</string>
     <string name="auth_unexpected_error">Something went wrong. Try again.</string>
