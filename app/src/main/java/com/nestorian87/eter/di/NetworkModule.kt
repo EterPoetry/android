@@ -90,6 +90,7 @@ object NetworkModule {
     @RefreshAuthApi
     fun provideRefreshAuthApi(
         loggingInterceptor: HttpLoggingInterceptor,
+        chuckerInterceptor: ChuckerInterceptor,
         cookieJar: CookieJar,
         json: Json,
     ): Api {
@@ -98,6 +99,7 @@ object NetworkModule {
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor(chuckerInterceptor)
             .addInterceptor(loggingInterceptor)
             .build()
 

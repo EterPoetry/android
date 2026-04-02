@@ -43,7 +43,6 @@ interface Api {
     @POST("auth/email/verify/request")
     suspend fun requestEmailVerificationCode()
 
-    @NoAuth
     @POST("auth/email/verify")
     suspend fun verifyEmail(
         @Body request: EmailVerificationRequestDto,
