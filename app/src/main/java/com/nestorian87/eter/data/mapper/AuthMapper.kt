@@ -9,6 +9,7 @@ import com.nestorian87.eter.domain.model.AuthUser
 fun AuthUserDto.toDomain(): AuthUser = AuthUser(
     userId = userId,
     name = name,
+    username = username,
     email = email,
     photo = photo,
     isEmailVerified = isEmailVerified,
@@ -23,6 +24,7 @@ fun AuthResponseDto.toDomain(): AuthSession = AuthSession(
 fun ProfileMeDto.toAuthUser(): AuthUser = AuthUser(
     userId = userId,
     name = name,
+    username = username,
     email = email,
     photo = photo,
     isEmailVerified = isEmailVerified,

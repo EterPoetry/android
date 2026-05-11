@@ -78,6 +78,15 @@ private fun ProfileScreenContent(
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(EterSpacing.xSmall))
+        if (uiState.username.isNotBlank()) {
+            Text(
+                text = stringResource(R.string.profile_username_format, uiState.username),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(modifier = Modifier.height(EterSpacing.xSmall))
+        }
         Text(
             text = uiState.email.ifBlank { stringResource(R.string.profile_default_email) },
             style = MaterialTheme.typography.bodyLarge,
@@ -101,6 +110,7 @@ private fun ProfileScreenPreview() {
         ProfileScreenContent(
             uiState = ProfileUiState(
                 name = "User",
+                username = "eter_user",
                 email = "user@example.com",
             ),
             onLogoutClick = {},

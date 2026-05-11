@@ -12,6 +12,8 @@ fun AuthUiMessage.toMessageResId(): Int = when (this) {
         AuthUiMessage.Validation.FORGOT_PASSWORD_FILL_FIELD ->
             R.string.auth_forgot_password_fill_field_error
         AuthUiMessage.Validation.INVALID_EMAIL -> R.string.auth_invalid_email_error
+        AuthUiMessage.Validation.INVALID_VERIFICATION_CODE ->
+            R.string.auth_email_verification_invalid_code
         AuthUiMessage.Validation.PASSWORD_TOO_SHORT -> R.string.auth_password_too_short_error
         AuthUiMessage.Validation.REGISTER_PASSWORD_MISMATCH ->
             R.string.auth_register_password_mismatch_error

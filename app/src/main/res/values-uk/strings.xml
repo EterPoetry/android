@@ -23,10 +23,13 @@
     <string name="profile_logout_cta">Вийти</string>
     <string name="profile_default_name">Користувач Eter</string>
     <string name="profile_default_email">Пошта недоступна</string>
+    <string name="profile_username_format">@%1$s</string>
     <string name="auth_email_label">Email-адреса</string>
     <string name="auth_email_placeholder">Введіть ваш email</string>
     <string name="auth_name_label">Імʼя</string>
     <string name="auth_name_placeholder">Введіть ваше імʼя</string>
+    <string name="auth_username_label">Юзернейм</string>
+    <string name="auth_username_placeholder">Оберіть юзернейм</string>
     <string name="auth_password_label">Пароль</string>
     <string name="auth_password_placeholder">Введіть ваш пароль</string>
     <string name="auth_confirm_password_label">Повторіть пароль</string>

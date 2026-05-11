@@ -25,6 +25,7 @@ class ProfileViewModel @Inject constructor(
                 _uiState.update { current ->
                     current.copy(
                         name = session?.user?.name.orEmpty(),
+                        username = session?.user?.username.orEmpty(),
                         email = session?.user?.email.orEmpty(),
                     )
                 }

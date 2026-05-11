@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class ProfileMeDto(
     val userId: Long,
     val name: String,
+    val username: String,
     val email: String,
     val photo: String? = null,
     val isEmailVerified: Boolean = false,

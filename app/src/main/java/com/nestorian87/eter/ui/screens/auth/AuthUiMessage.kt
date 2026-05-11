@@ -10,6 +10,7 @@ sealed interface AuthUiMessage {
         REGISTER_FILL_FIELDS,
         FORGOT_PASSWORD_FILL_FIELD,
         INVALID_EMAIL,
+        INVALID_VERIFICATION_CODE,
         PASSWORD_TOO_SHORT,
         REGISTER_PASSWORD_MISMATCH,
     }

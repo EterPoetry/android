@@ -88,7 +88,12 @@ class AuthRepositoryImpl @Inject constructor(
         return authSession
     }
 
-    override suspend fun register(name: String, email: String, password: String): AuthSession {
+    override suspend fun register(
+        name: String,
+        username: String,
+        email: String,
+        password: String,
+    ): AuthSession {
         awaitInitialization()
         val authSession = executeAuthRequest(
             httpErrorMapper = { statusCode ->
@@ -102,6 +107,7 @@ class AuthRepositoryImpl @Inject constructor(
             api.register(
                 request = RegisterRequestDto(
                     name = name.trim(),
+                    username = username.trim(),
                     email = email.trim(),
                     password = password,
                 ),

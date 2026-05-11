@@ -23,10 +23,13 @@
     <string name="profile_logout_cta">Log out</string>
     <string name="profile_default_name">Eter user</string>
     <string name="profile_default_email">No email available</string>
+    <string name="profile_username_format">@%1$s</string>
     <string name="auth_email_label">Email address</string>
     <string name="auth_email_placeholder">Enter your email</string>
     <string name="auth_name_label">Name</string>
     <string name="auth_name_placeholder">Enter your name</string>
+    <string name="auth_username_label">Username</string>
+    <string name="auth_username_placeholder">Choose a username</string>
     <string name="auth_password_label">Password</string>
     <string name="auth_password_placeholder">Enter your password</string>
     <string name="auth_confirm_password_label">Confirm password</string>

@@ -5,6 +5,7 @@ import com.nestorian87.eter.ui.screens.auth.AuthUiMessage
 
 data class RegisterUiState(
     val name: String = "",
+    val username: String = "",
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",

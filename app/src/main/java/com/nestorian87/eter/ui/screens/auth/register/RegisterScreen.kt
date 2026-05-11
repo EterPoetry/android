@@ -75,6 +75,7 @@ fun RegisterScreen(
         modifier = modifier.fillMaxSize(),
         uiState = uiState,
         onNameChanged = viewModel::onNameChanged,
+        onUsernameChanged = viewModel::onUsernameChanged,
         onEmailChanged = viewModel::onEmailChanged,
         onPasswordChanged = viewModel::onPasswordChanged,
         onConfirmPasswordChanged = viewModel::onConfirmPasswordChanged,
@@ -91,6 +92,7 @@ fun RegisterScreen(
 private fun RegisterScreenContent(
     uiState: RegisterUiState,
     onNameChanged: (String) -> Unit,
+    onUsernameChanged: (String) -> Unit,
     onEmailChanged: (String) -> Unit,
     onPasswordChanged: (String) -> Unit,
     onConfirmPasswordChanged: (String) -> Unit,
@@ -102,6 +104,7 @@ private fun RegisterScreenContent(
     onNavigateToLogin: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val usernameFocusRequester = remember { FocusRequester() }
     val emailFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }
     val confirmPasswordFocusRequester = remember { FocusRequester() }
@@ -127,6 +130,7 @@ private fun RegisterScreenContent(
                 text = stringResource(R.string.auth_register_cta),
                 enabled = !isSubmitting &&
                     uiState.name.isNotBlank() &&
+                    uiState.username.isNotBlank() &&
                     uiState.email.isNotBlank() &&
                     uiState.password.isNotBlank() &&
                     uiState.confirmPassword.isNotBlank(),
@@ -153,6 +157,22 @@ private fun RegisterScreenContent(
             label = stringResource(R.string.auth_name_label),
             placeholder = stringResource(R.string.auth_name_placeholder),
             maxLength = AuthInputLimits.MAX_NAME_LENGTH,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next,
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { usernameFocusRequester.requestFocus() },
+            ),
+        )
+        Spacer(modifier = Modifier.height(EterSpacing.section))
+        UnderlinedTextField(
+            value = uiState.username,
+            onValueChange = onUsernameChanged,
+            label = stringResource(R.string.auth_username_label),
+            placeholder = stringResource(R.string.auth_username_placeholder),
+            maxLength = AuthInputLimits.MAX_USERNAME_LENGTH,
+            modifier = Modifier.focusRequester(usernameFocusRequester),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next,
@@ -292,6 +312,7 @@ private fun RegisterScreenPreview() {
         RegisterScreenContent(
             uiState = RegisterUiState(),
             onNameChanged = {},
+            onUsernameChanged = {},
             onEmailChanged = {},
             onPasswordChanged = {},
             onConfirmPasswordChanged = {},

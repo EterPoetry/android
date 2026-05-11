@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class AuthUserDto(
     val userId: Long,
     val name: String,
+    val username: String,
     val email: String,
     val googleId: String? = null,
     val resetPasswordTokenHash: String? = null,

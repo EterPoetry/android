@@ -37,6 +37,15 @@ class RegisterViewModel @Inject constructor(
         }
     }
 
+    fun onUsernameChanged(value: String) {
+        _uiState.update { current ->
+            current.copy(
+                username = value,
+                errorMessage = null,
+            )
+        }
+    }
+
     fun onEmailChanged(value: String) {
         _uiState.update { current ->
             current.copy(
@@ -120,12 +129,17 @@ class RegisterViewModel @Inject constructor(
         }
 
         val name = snapshot.name.trim()
+        val username = snapshot.username.trim()
         val email = snapshot.email.trim()
         val password = snapshot.password
         val confirmPassword = snapshot.confirmPassword
 
         val errorMessage = when {
-            name.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank() ->
+            name.isBlank() ||
+                username.isBlank() ||
+                email.isBlank() ||
+                password.isBlank() ||
+                confirmPassword.isBlank() ->
                 AuthUiMessage.Validation.REGISTER_FILL_FIELDS
             !isValidEmail(email) -> AuthUiMessage.Validation.INVALID_EMAIL
             password.length < AuthInputLimits.MIN_PASSWORD_LENGTH ->
@@ -150,6 +164,7 @@ class RegisterViewModel @Inject constructor(
             runCatching {
                 authRepository.register(
                     name = name,
+                    username = username,
                     email = email,
                     password = password,
                 )

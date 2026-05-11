@@ -11,7 +11,7 @@ interface AuthRepository {
 
     suspend fun loginWithGoogle(idToken: String): AuthSession
 
-    suspend fun register(name: String, email: String, password: String): AuthSession
+    suspend fun register(name: String, username: String, email: String, password: String): AuthSession
 
     suspend fun getEmailVerificationStatus(): EmailVerificationStatus
 
