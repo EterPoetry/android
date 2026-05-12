@@ -12,5 +12,7 @@ data class RegisterUiState(
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
     val activeSubmission: AuthSubmissionType? = null,
-    val errorMessage: AuthUiMessage? = null,
+    val usernameErrorMessage: AuthUiMessage? = null,
+    val emailErrorMessage: AuthUiMessage? = null,
+    val formErrorMessage: AuthUiMessage? = null,
 )

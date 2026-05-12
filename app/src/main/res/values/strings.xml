@@ -54,9 +54,12 @@
     <string name="auth_forgot_password_fill_field_error">Enter your email address</string>
     <string name="auth_invalid_email_error">Enter a valid email address</string>
     <string name="auth_password_too_short_error">Password must be at least 6 characters</string>
+    <string name="auth_username_too_short_error">Username must be at least 3 characters</string>
     <string name="auth_register_password_mismatch_error">Passwords do not match</string>
     <string name="auth_register_invalid_data_error">Check your registration details and try again</string>
+    <string name="auth_register_data_conflict_error">This email or username is already in use</string>
     <string name="auth_register_email_exists_error">An account with this email already exists</string>
+    <string name="auth_register_username_exists_error">This username is already taken</string>
     <string name="auth_invalid_credentials_error">Incorrect email or password</string>
     <string name="auth_email_verification_title">Verification</string>
     <string name="auth_email_verification_description">To unlock all features, you need to verify your email address %1$s.</string>

@@ -2,6 +2,9 @@ package com.nestorian87.eter.ui.screens.auth.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nestorian87.eter.R
+import com.nestorian87.eter.domain.model.FieldViolation
+import com.nestorian87.eter.domain.model.ServerValidationException
 import com.nestorian87.eter.domain.repository.AuthRepository
 import com.nestorian87.eter.ui.screens.auth.AuthInputLimits
 import com.nestorian87.eter.ui.screens.auth.AuthSubmissionType
@@ -32,7 +35,7 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { current ->
             current.copy(
                 name = value,
-                errorMessage = null,
+                formErrorMessage = null,
             )
         }
     }
@@ -41,7 +44,8 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { current ->
             current.copy(
                 username = value,
-                errorMessage = null,
+                usernameErrorMessage = null,
+                formErrorMessage = null,
             )
         }
     }
@@ -50,7 +54,8 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { current ->
             current.copy(
                 email = value,
-                errorMessage = null,
+                emailErrorMessage = null,
+                formErrorMessage = null,
             )
         }
     }
@@ -59,7 +64,7 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { current ->
             current.copy(
                 password = value,
-                errorMessage = null,
+                formErrorMessage = null,
             )
         }
     }
@@ -68,7 +73,7 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { current ->
             current.copy(
                 confirmPassword = value,
-                errorMessage = null,
+                formErrorMessage = null,
             )
         }
     }
@@ -89,7 +94,7 @@ class RegisterViewModel @Inject constructor(
         _uiState.update { current ->
             current.copy(
                 activeSubmission = null,
-                errorMessage = AuthUiMessage.GoogleAuthFailed,
+                formErrorMessage = AuthUiMessage.GoogleAuthFailed,
             )
         }
     }
@@ -103,19 +108,19 @@ class RegisterViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     activeSubmission = AuthSubmissionType.GOOGLE,
-                    errorMessage = null,
+                    formErrorMessage = null,
                 )
             }
             runCatching {
                 authRepository.loginWithGoogle(idToken = idToken)
             }.onSuccess {
-                _uiState.update { it.copy(activeSubmission = null, errorMessage = null) }
+                _uiState.update { it.copy(activeSubmission = null, formErrorMessage = null) }
                 effectChannel.send(RegisterEffect.NavigateToMain)
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(
                         activeSubmission = null,
-                        errorMessage = error.toAuthUiMessage(),
+                        formErrorMessage = error.toAuthUiMessage(),
                     )
                 }
             }
@@ -134,7 +139,7 @@ class RegisterViewModel @Inject constructor(
         val password = snapshot.password
         val confirmPassword = snapshot.confirmPassword
 
-        val errorMessage = when {
+        val formErrorMessage = when {
             name.isBlank() ||
                 username.isBlank() ||
                 email.isBlank() ||
@@ -149,8 +154,25 @@ class RegisterViewModel @Inject constructor(
             else -> null
         }
 
-        if (errorMessage != null) {
-            _uiState.update { it.copy(errorMessage = errorMessage) }
+        if (formErrorMessage != null) {
+            _uiState.update {
+                it.copy(
+                    usernameErrorMessage = null,
+                    emailErrorMessage = null,
+                    formErrorMessage = formErrorMessage,
+                )
+            }
+            return
+        }
+
+        if (username.length < AuthInputLimits.MIN_USERNAME_LENGTH) {
+            _uiState.update {
+                it.copy(
+                    usernameErrorMessage = AuthUiMessage.Validation.USERNAME_TOO_SHORT,
+                    emailErrorMessage = null,
+                    formErrorMessage = null,
+                )
+            }
             return
         }
 
@@ -158,7 +180,9 @@ class RegisterViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     activeSubmission = AuthSubmissionType.CREDENTIALS,
-                    errorMessage = null,
+                    usernameErrorMessage = null,
+                    emailErrorMessage = null,
+                    formErrorMessage = null,
                 )
             }
             runCatching {
@@ -169,16 +193,76 @@ class RegisterViewModel @Inject constructor(
                     password = password,
                 )
             }.onSuccess {
-                _uiState.update { it.copy(activeSubmission = null, errorMessage = null) }
-                effectChannel.send(RegisterEffect.NavigateToMain)
-            }.onFailure { error ->
                 _uiState.update {
                     it.copy(
                         activeSubmission = null,
-                        errorMessage = error.toAuthUiMessage(),
+                        usernameErrorMessage = null,
+                        emailErrorMessage = null,
+                        formErrorMessage = null,
                     )
+                }
+                effectChannel.send(RegisterEffect.NavigateToMain)
+            }.onFailure { error ->
+                _uiState.update { current ->
+                    current.withSubmissionError(error)
                 }
             }
         }
+    }
+
+    private fun RegisterUiState.withSubmissionError(error: Throwable): RegisterUiState {
+        val validationError = error as? ServerValidationException
+        val fieldViolations = validationError?.fieldViolations.orEmpty()
+
+        val usernameErrorMessage = fieldViolations
+            .toFieldErrorMessage(
+                field = RegistrationField.USERNAME,
+                code = RegistrationErrorCode.USERNAME_NOT_UNIQUE,
+                resId = R.string.auth_register_username_exists_error,
+            )
+        val emailErrorMessage = fieldViolations
+            .toFieldErrorMessage(
+                field = RegistrationField.EMAIL,
+                code = RegistrationErrorCode.EMAIL_NOT_UNIQUE,
+                resId = R.string.auth_register_email_exists_error,
+            )
+        val formErrorMessage = if (usernameErrorMessage != null || emailErrorMessage != null) {
+            null
+        } else {
+            error.toAuthUiMessage()
+        }
+
+        return copy(
+            activeSubmission = null,
+            usernameErrorMessage = usernameErrorMessage,
+            emailErrorMessage = emailErrorMessage,
+            formErrorMessage = formErrorMessage,
+        )
+    }
+
+    private fun Set<FieldViolation>.toFieldErrorMessage(
+        field: String,
+        code: String,
+        resId: Int,
+    ): AuthUiMessage? {
+        val hasViolation = any { violation ->
+            violation.field == field && violation.code == code
+        }
+
+        return if (hasViolation) {
+            AuthUiMessage.ResourceMessage(resId)
+        } else {
+            null
+        }
+    }
+
+    private object RegistrationField {
+        const val EMAIL = "email"
+        const val USERNAME = "username"
+    }
+
+    private object RegistrationErrorCode {
+        const val EMAIL_NOT_UNIQUE = "EMAIL_NOT_UNIQUE"
+        const val USERNAME_NOT_UNIQUE = "USERNAME_NOT_UNIQUE"
     }
 }

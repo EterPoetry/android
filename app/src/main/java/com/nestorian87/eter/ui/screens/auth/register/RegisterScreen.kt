@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,13 +38,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nestorian87.eter.BuildConfig
 import com.nestorian87.eter.R
+import com.nestorian87.eter.ui.components.AnimatedErrorMessage
 import com.nestorian87.eter.ui.components.FormScreenScaffold
 import com.nestorian87.eter.ui.components.GoogleAuthButton
 import com.nestorian87.eter.ui.components.LabeledDivider
 import com.nestorian87.eter.ui.components.PrimaryActionButton
 import com.nestorian87.eter.ui.components.TextAction
 import com.nestorian87.eter.ui.components.UnderlinedTextField
-import com.nestorian87.eter.ui.components.AnimatedErrorMessage
 import com.nestorian87.eter.ui.screens.auth.AuthInputLimits
 import com.nestorian87.eter.ui.screens.auth.AuthSubmissionType
 import com.nestorian87.eter.ui.screens.auth.google.rememberGoogleIdTokenRequester
@@ -116,6 +115,8 @@ private fun RegisterScreenContent(
         onTokenReceived = onGoogleIdTokenReceived,
         onFailure = onGoogleAuthFailed,
     )
+    val usernameErrorMessage = uiState.usernameErrorMessage?.let { stringResource(it.toMessageResId()) }
+    val emailErrorMessage = uiState.emailErrorMessage?.let { stringResource(it.toMessageResId()) }
 
     FormScreenScaffold(
         modifier = modifier,
@@ -172,6 +173,7 @@ private fun RegisterScreenContent(
             label = stringResource(R.string.auth_username_label),
             placeholder = stringResource(R.string.auth_username_placeholder),
             maxLength = AuthInputLimits.MAX_USERNAME_LENGTH,
+            errorMessage = usernameErrorMessage,
             modifier = Modifier.focusRequester(usernameFocusRequester),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
@@ -188,6 +190,7 @@ private fun RegisterScreenContent(
             label = stringResource(R.string.auth_email_label),
             placeholder = stringResource(R.string.auth_email_placeholder),
             maxLength = AuthInputLimits.MAX_EMAIL_LENGTH,
+            errorMessage = emailErrorMessage,
             modifier = Modifier.focusRequester(emailFocusRequester),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
@@ -254,7 +257,7 @@ private fun RegisterScreenContent(
                 },
             ),
         )
-        AnimatedErrorMessage(messageResId = uiState.errorMessage?.toMessageResId())
+        AnimatedErrorMessage(messageResId = uiState.formErrorMessage?.toMessageResId())
         Spacer(modifier = Modifier.height(EterSpacing.xLarge))
         Row(
             modifier = Modifier.fillMaxWidth(),

@@ -5,14 +5,22 @@ import java.io.IOException
 import retrofit2.HttpException
 
 suspend inline fun <T> executeAuthRequest(
-    crossinline httpErrorMapper: (statusCode: Int) -> AuthException.Reason = { AuthException.Reason.UNKNOWN },
+    crossinline httpErrorMapper: (error: HttpException) -> Throwable = {
+        AuthException(
+            reasons = setOf(AuthException.Reason.UNKNOWN),
+            cause = it,
+        )
+    },
     crossinline block: suspend () -> T,
 ): T {
     try {
         return block()
     } catch (error: IOException) {
-        throw AuthException(AuthException.Reason.NETWORK, error)
+        throw AuthException(
+            reasons = setOf(AuthException.Reason.NETWORK),
+            cause = error,
+        )
     } catch (error: HttpException) {
-        throw AuthException(httpErrorMapper(error.code()), error)
+        throw httpErrorMapper(error)
     }
 }

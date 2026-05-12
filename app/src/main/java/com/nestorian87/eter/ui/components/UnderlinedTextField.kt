@@ -31,6 +31,7 @@ fun UnderlinedTextField(
     placeholder: String,
     modifier: Modifier = Modifier,
     maxLength: Int? = null,
+    errorMessage: String? = null,
     trailing: (@Composable () -> Unit)? = null,
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     singleLine: Boolean = true,
@@ -86,5 +87,13 @@ fun UnderlinedTextField(
             thickness = 1.6.dp,
             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.85f),
         )
+        if (errorMessage != null) {
+            Spacer(modifier = Modifier.height(EterSpacing.xSmall))
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
     }
 }

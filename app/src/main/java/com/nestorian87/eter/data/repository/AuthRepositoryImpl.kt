@@ -21,6 +21,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.json.Json
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
@@ -28,9 +29,11 @@ class AuthRepositoryImpl @Inject constructor(
     private val sessionStore: AuthSessionStore,
     private val cookieJar: AuthCookieJar,
     private val refreshTokenCoordinator: RefreshTokenCoordinator,
+    json: Json,
     applicationScope: CoroutineScope,
 ) : AuthRepository {
     private val initialization = CompletableDeferred<Unit>()
+    private val serverErrorMapper = AuthServerErrorMapper(json)
 
     init {
         applicationScope.launch {
@@ -50,11 +53,16 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun login(email: String, password: String): AuthSession {
         awaitInitialization()
         val authSession = executeAuthRequest(
-            httpErrorMapper = { statusCode ->
-                when (statusCode) {
-                    400, 401 -> AuthException.Reason.INVALID_CREDENTIALS
-                    else -> AuthException.Reason.UNKNOWN
-                }
+            httpErrorMapper = { error ->
+                AuthException(
+                    reasons = setOf(
+                        when (error.code()) {
+                            400, 401 -> AuthException.Reason.INVALID_CREDENTIALS
+                            else -> AuthException.Reason.UNKNOWN
+                        },
+                    ),
+                    cause = error,
+                )
             },
         ) {
             api.login(
@@ -71,11 +79,16 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun loginWithGoogle(idToken: String): AuthSession {
         awaitInitialization()
         val authSession = executeAuthRequest(
-            httpErrorMapper = { statusCode ->
-                when (statusCode) {
-                    400, 401 -> AuthException.Reason.GOOGLE_AUTH_FAILED
-                    else -> AuthException.Reason.UNKNOWN
-                }
+            httpErrorMapper = { error ->
+                AuthException(
+                    reasons = setOf(
+                        when (error.code()) {
+                            400, 401 -> AuthException.Reason.GOOGLE_AUTH_FAILED
+                            else -> AuthException.Reason.UNKNOWN
+                        },
+                    ),
+                    cause = error,
+                )
             },
         ) {
             api.loginWithGoogle(
@@ -96,12 +109,8 @@ class AuthRepositoryImpl @Inject constructor(
     ): AuthSession {
         awaitInitialization()
         val authSession = executeAuthRequest(
-            httpErrorMapper = { statusCode ->
-                when (statusCode) {
-                    409 -> AuthException.Reason.EMAIL_ALREADY_EXISTS
-                    400 -> AuthException.Reason.INVALID_REGISTRATION_DATA
-                    else -> AuthException.Reason.UNKNOWN
-                }
+            httpErrorMapper = { error ->
+                serverErrorMapper.toRegistrationException(error)
             },
         ) {
             api.register(
@@ -129,11 +138,16 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun requestEmailVerificationCode(): EmailVerificationStatus {
         awaitInitialization()
         return executeAuthRequest(
-            httpErrorMapper = { statusCode ->
-                when (statusCode) {
-                    429 -> AuthException.Reason.EMAIL_VERIFICATION_RATE_LIMIT
-                    else -> AuthException.Reason.UNKNOWN
-                }
+            httpErrorMapper = { error ->
+                AuthException(
+                    reasons = setOf(
+                        when (error.code()) {
+                            429 -> AuthException.Reason.EMAIL_VERIFICATION_RATE_LIMIT
+                            else -> AuthException.Reason.UNKNOWN
+                        },
+                    ),
+                    cause = error,
+                )
             },
         ) {
             api.requestEmailVerificationCode()
@@ -146,11 +160,16 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun verifyEmail(email: String, code: String) {
         awaitInitialization()
         executeAuthRequest(
-            httpErrorMapper = { statusCode ->
-                when (statusCode) {
-                    400, 401 -> AuthException.Reason.INVALID_VERIFICATION_CODE
-                    else -> AuthException.Reason.UNKNOWN
-                }
+            httpErrorMapper = { error ->
+                AuthException(
+                    reasons = setOf(
+                        when (error.code()) {
+                            400, 401 -> AuthException.Reason.INVALID_VERIFICATION_CODE
+                            else -> AuthException.Reason.UNKNOWN
+                        },
+                    ),
+                    cause = error,
+                )
             },
         ) {
             api.verifyEmail(

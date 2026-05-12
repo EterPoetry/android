@@ -54,9 +54,12 @@
     <string name="auth_forgot_password_fill_field_error">Введіть email-адресу</string>
     <string name="auth_invalid_email_error">Введіть коректну email-адресу</string>
     <string name="auth_password_too_short_error">Пароль має містити щонайменше 6 символів</string>
+    <string name="auth_username_too_short_error">Юзернейм має містити щонайменше 3 символи</string>
     <string name="auth_register_password_mismatch_error">Паролі не співпадають</string>
     <string name="auth_register_invalid_data_error">Перевірте дані реєстрації та спробуйте ще раз</string>
+    <string name="auth_register_data_conflict_error">Ця пошта або юзернейм уже зайняті</string>
     <string name="auth_register_email_exists_error">Акаунт із такою поштою вже існує</string>
+    <string name="auth_register_username_exists_error">Цей юзернейм уже зайнятий</string>
     <string name="auth_invalid_credentials_error">Неправильний email або пароль</string>
     <string name="auth_email_verification_title">Підтвердження</string>
     <string name="auth_email_verification_description">Щоб отримати доступ до всіх можливостей, необхідно підтвердити вашу поштову адресу %1$s.</string>
