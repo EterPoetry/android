@@ -17,7 +17,7 @@ enum class TopLevelDestination(
 ) {
     FEED(R.string.feed, Icons.Outlined.Home, FeedKey),
     SUBSCRIPTIONS(R.string.following, Icons.Outlined.RemoveRedEye, SubscriptionsKey),
-    CREATE(R.string.create, Icons.Rounded.Add, CreateKey),
+    CREATE(R.string.create, Icons.Rounded.Add, CreateKey()),
     FAVORITES(R.string.favorites, Icons.Outlined.FavoriteBorder, FavoritesKey),
     PROFILE(R.string.profile, Icons.Outlined.AccountCircle, ProfileKey),
 }

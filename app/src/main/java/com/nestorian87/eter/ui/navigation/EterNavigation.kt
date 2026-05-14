@@ -11,8 +11,8 @@ import com.nestorian87.eter.ui.screens.auth.forgotPassword.ForgotPasswordScreen
 import com.nestorian87.eter.ui.screens.auth.login.LoginScreen
 import com.nestorian87.eter.ui.screens.auth.register.RegisterScreen
 import com.nestorian87.eter.ui.screens.create.LyricSyncScreen
-import com.nestorian87.eter.ui.screens.create.PublishScreen
 import com.nestorian87.eter.ui.screens.create.RecordAudioScreen
+import com.nestorian87.eter.ui.screens.editpost.EditPostScreen
 import com.nestorian87.eter.ui.screens.feed.FeedScreen
 import com.nestorian87.eter.ui.screens.favorites.FavoritesScreen
 import com.nestorian87.eter.ui.screens.notifications.NotificationsScreen
@@ -22,7 +22,6 @@ import com.nestorian87.eter.ui.screens.profile.FollowersScreen
 import com.nestorian87.eter.ui.screens.profile.ProfileScreen
 import com.nestorian87.eter.ui.screens.profile.SettingsScreen
 import com.nestorian87.eter.ui.screens.profile.SubscriptionManagementScreen
-import com.nestorian87.eter.ui.screens.create.CreateEntryScreen
 import com.nestorian87.eter.ui.screens.subscriptions.SubscriptionsScreen
 
 @Composable
@@ -69,7 +68,12 @@ fun EterNavigation(
                 SubscriptionsScreen(modifier = modifier)
             }
             entry<CreateKey> {
-                CreateEntryScreen(modifier = modifier)
+                RecordAudioScreen(
+                    modifier = modifier,
+                    onNavigateToEditPost = { postId ->
+                        navigationState.navigate(EditPostKey(postId = postId))
+                    },
+                )
             }
             entry<FavoritesKey> {
                 FavoritesScreen(modifier = modifier)
@@ -78,10 +82,19 @@ fun EterNavigation(
                 ProfileScreen(modifier = modifier)
             }
             entry<RecordAudioKey> {
-                RecordAudioScreen(modifier = modifier)
+                RecordAudioScreen(
+                    modifier = modifier,
+                    onNavigateToEditPost = { postId ->
+                        navigationState.navigate(EditPostKey(postId = postId))
+                    },
+                )
             }
-            entry<PublishKey> {
-                PublishScreen(modifier = modifier)
+            entry<EditPostKey> { key ->
+                EditPostScreen(
+                    postId = key.postId,
+                    modifier = modifier,
+                    onBackClick = navigationState::pop,
+                )
             }
             entry<LyricSyncKey> {
                 LyricSyncScreen(modifier = modifier)

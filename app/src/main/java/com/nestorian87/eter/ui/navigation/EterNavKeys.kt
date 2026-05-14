@@ -17,7 +17,9 @@ data object FeedKey : TopLevelNavKey
 data object SubscriptionsKey : TopLevelNavKey
 
 @Serializable
-data object CreateKey : TopLevelNavKey
+data class CreateKey(
+    val sessionId: String = UUID.randomUUID().toString(),
+) : TopLevelNavKey
 
 @Serializable
 data object FavoritesKey : TopLevelNavKey
@@ -43,8 +45,8 @@ data class RecordAudioKey(
 ) : EterNavKey
 
 @Serializable
-data class PublishKey(
-    val audioFilePath: String,
+data class EditPostKey(
+    val postId: Long,
 ) : EterNavKey
 
 @Serializable

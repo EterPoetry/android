@@ -27,7 +27,7 @@ fun SecondaryActionButton(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 62.dp)
+            .defaultMinSize(minHeight = 52.dp)
             .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.background)
             .border(
@@ -36,12 +36,12 @@ fun SecondaryActionButton(
                 shape = MaterialTheme.shapes.small,
             )
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(vertical = 18.dp),
+            .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
             color = if (enabled) {
                 MaterialTheme.colorScheme.onBackground
             } else {

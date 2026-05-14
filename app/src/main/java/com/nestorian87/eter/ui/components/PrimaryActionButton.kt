@@ -39,7 +39,7 @@ fun PrimaryActionButton(
     isLoading: Boolean = false,
     onClick: () -> Unit = {},
 ) {
-    val textStyle = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
+    val textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
     var isLoaderVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(isLoading) {
@@ -60,7 +60,7 @@ fun PrimaryActionButton(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 62.dp)
+            .defaultMinSize(minHeight = 52.dp)
             .clip(MaterialTheme.shapes.small)
             .background(
                 if (enabled) {
@@ -70,7 +70,7 @@ fun PrimaryActionButton(
                 },
             )
             .clickable(enabled = enabled && !isLoading, onClick = onClick)
-            .padding(vertical = 18.dp),
+            .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(

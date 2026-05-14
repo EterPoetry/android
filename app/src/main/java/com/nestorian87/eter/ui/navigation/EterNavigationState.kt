@@ -22,9 +22,6 @@ class EterNavigationState(
     var currentTab by mutableStateOf(TopLevelDestination.FEED)
         private set
 
-    val currentTopLevelKey: TopLevelNavKey
-        get() = currentTab.navKey
-
     val currentBackStack: NavBackStack<NavKey>
         get() = if (isAuthenticated) {
             mainBackStacks.getValue(currentTab)
@@ -35,8 +32,12 @@ class EterNavigationState(
     fun selectTab(destination: TopLevelDestination) {
         currentTab = destination
         val stack = mainBackStacks.getValue(destination)
+        if (destination == TopLevelDestination.CREATE && stack.any { it !is CreateKey }) {
+            resetCreateStack(stack)
+            return
+        }
         if (stack.isEmpty()) {
-            stack.add(destination.navKey)
+            stack.add(rootKeyFor(destination))
         }
     }
 
@@ -65,6 +66,18 @@ class EterNavigationState(
         isAuthenticated = true
         selectTab(TopLevelDestination.FEED)
     }
+
+    private fun resetCreateStack(stack: NavBackStack<NavKey>) {
+        while (stack.isNotEmpty()) {
+            stack.removeLastOrNull()
+        }
+        stack.add(CreateKey())
+    }
+
+    private fun rootKeyFor(destination: TopLevelDestination): TopLevelNavKey = when (destination) {
+        TopLevelDestination.CREATE -> CreateKey()
+        else -> destination.navKey
+    }
 }
 
 @Composable
@@ -74,7 +87,7 @@ fun rememberEterNavigationState(
     val authBackStack = rememberNavBackStack(LoginKey)
     val feedBackStack = rememberNavBackStack(FeedKey)
     val subscriptionsBackStack = rememberNavBackStack(SubscriptionsKey)
-    val createBackStack = rememberNavBackStack(CreateKey)
+    val createBackStack = rememberNavBackStack(CreateKey())
     val favoritesBackStack = rememberNavBackStack(FavoritesKey)
     val profileBackStack = rememberNavBackStack(ProfileKey)
 
