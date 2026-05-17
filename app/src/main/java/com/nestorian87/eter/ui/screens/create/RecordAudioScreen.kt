@@ -2,6 +2,7 @@ package com.nestorian87.eter.ui.screens.create
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
@@ -439,7 +440,7 @@ private fun AudioPreviewRow(
     onClearAudioClick: () -> Unit,
 ) {
     AudioPlaybackCard(
-        mediaUri = java.io.File(audio.localFilePath).toURI().toString(),
+        mediaUri = Uri.fromFile(java.io.File(audio.localFilePath)).toString(),
         title = resolveSelectedAudioTitle(audio),
         playContentDescription = stringResource(R.string.create_audio_play_audio),
         pauseContentDescription = stringResource(R.string.create_audio_pause_audio),

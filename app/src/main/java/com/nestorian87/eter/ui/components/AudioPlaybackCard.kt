@@ -1,10 +1,8 @@
 package com.nestorian87.eter.ui.components
 
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -33,12 +32,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -58,20 +55,23 @@ fun AudioPlaybackCard(
     trailingContent: (@Composable () -> Unit)? = null,
     durationFallbackMs: Long = 0L,
     containerColor: Color = MaterialTheme.colorScheme.surface,
-    playButtonContainerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    border: BorderStroke? = null,
+    shadowElevation: Dp = 0.dp,
+    playButtonContainerColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
     playButtonTint: Color = MaterialTheme.colorScheme.primary,
 ) {
     val context = LocalContext.current
-    val player = remember(mediaUri) {
+    val resolvedMediaUri = mediaUri.resolveRemoteAssetUrl() ?: mediaUri
+    val player = remember(resolvedMediaUri) {
         ExoPlayer.Builder(context.applicationContext).build().apply {
-            setMediaItem(MediaItem.fromUri(mediaUri))
+            setMediaItem(MediaItem.fromUri(resolvedMediaUri))
             prepare()
         }
     }
     var isPlaying by remember(player) { mutableStateOf(false) }
     var durationMs by remember(player) { mutableLongStateOf(durationFallbackMs) }
     var positionMs by remember(player) { mutableLongStateOf(0L) }
-    var seekPreviewProgress by remember(player) { mutableStateOf<Float?>(null) }
+    var seekPreviewProgress by remember(player) { mutableFloatStateOf(Float.NaN) }
 
     DisposableEffect(player, durationFallbackMs) {
         val listener = object : Player.Listener {
@@ -111,6 +111,8 @@ fun AudioPlaybackCard(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = containerColor,
+        border = border,
+        shadowElevation = shadowElevation,
     ) {
         Column(
             modifier = Modifier
@@ -123,7 +125,7 @@ fun AudioPlaybackCard(
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(MaterialTheme.shapes.small)
+                        .clip(CircleShape)
                         .background(playButtonContainerColor)
                         .clickable {
                             if (player.playbackState == Player.STATE_ENDED) {
@@ -173,22 +175,23 @@ fun AudioPlaybackCard(
                 }
             }
             Spacer(modifier = Modifier.height(EterSpacing.medium))
-            AudioProgressBar(
-                progress = seekPreviewProgress ?: if (durationMs > 0L) {
+            EterSlider(
+                modifier = Modifier.fillMaxWidth(),
+                value = if (!seekPreviewProgress.isNaN()) {
+                    seekPreviewProgress
+                } else if (durationMs > 0L) {
                     (positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
                 } else {
                     0f
                 },
-                enabled = durationMs > 0L && player.isCurrentMediaItemSeekable,
-                onSeek = { progress ->
+                onValueChange = { progress ->
                     val targetPositionMs = (durationMs * progress).toLong().coerceIn(0L, durationMs)
                     seekPreviewProgress = progress
                     positionMs = targetPositionMs
                     player.seekTo(targetPositionMs)
                 },
-                onSeekFinished = {
-                    seekPreviewProgress = null
-                },
+                onValueChangeFinished = { seekPreviewProgress = Float.NaN },
+                enabled = durationMs > 0L && player.isCurrentMediaItemSeekable,
             )
             Spacer(modifier = Modifier.height(EterSpacing.xSmall))
             Row {
@@ -208,70 +211,6 @@ fun AudioPlaybackCard(
     }
 }
 
-@Composable
-private fun AudioProgressBar(
-    progress: Float,
-    enabled: Boolean,
-    onSeek: (Float) -> Unit,
-    onSeekFinished: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
-    val progressColor = MaterialTheme.colorScheme.primary
-    var widthPx by remember { mutableFloatStateOf(0f) }
-
-    fun positionToProgress(x: Float): Float {
-        if (widthPx <= 0f) return 0f
-        return (x / widthPx).coerceIn(0f, 1f)
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(24.dp)
-            .onSizeChanged { widthPx = it.width.toFloat() }
-            .pointerInput(enabled) {
-                if (!enabled) return@pointerInput
-
-                detectTapGestures { offset ->
-                    onSeek(positionToProgress(offset.x))
-                    onSeekFinished()
-                }
-            }
-            .pointerInput(enabled) {
-                if (!enabled) return@pointerInput
-
-                detectHorizontalDragGestures(
-                    onDragEnd = onSeekFinished,
-                    onDragCancel = onSeekFinished,
-                ) { change, _ ->
-                    onSeek(positionToProgress(change.position.x))
-                    change.consume()
-                }
-            },
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(8.dp),
-        ) {
-            val trackHeight = size.height
-            drawRoundRect(
-                color = trackColor,
-                cornerRadius = CornerRadius.Zero,
-            )
-            drawRoundRect(
-                color = progressColor,
-                size = androidx.compose.ui.geometry.Size(
-                    width = size.width * progress.coerceIn(0f, 1f),
-                    height = trackHeight,
-                ),
-                cornerRadius = CornerRadius.Zero,
-            )
-        }
-    }
-}
 
 private fun formatAudioDuration(durationMs: Long): String {
     val totalSeconds = (durationMs.coerceAtLeast(0L) / 1000L)

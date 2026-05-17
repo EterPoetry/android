@@ -56,7 +56,8 @@ data class LyricSyncKey(
 
 @Serializable
 data class PostKey(
-    val postId: String,
+    val postId: Long,
+    val focusComments: Boolean = false,
 ) : EterNavKey
 
 @Serializable

@@ -30,6 +30,8 @@ fun PostException.Reason.toMessageResId(): Int = when (this) {
         R.string.create_audio_processing_error
     PostException.Reason.AUDIO_REPLACEMENT_NOT_ALLOWED ->
         R.string.create_audio_replace_not_allowed_error
+    PostException.Reason.POPULAR_SNAPSHOT_EXPIRED ->
+        R.string.create_audio_unexpected_error
     PostException.Reason.NOT_FOUND -> R.string.create_audio_post_not_found_error
     PostException.Reason.FORBIDDEN -> R.string.create_audio_forbidden_error
     PostException.Reason.UNKNOWN -> R.string.create_audio_unexpected_error

@@ -23,7 +23,6 @@ import com.nestorian87.eter.ui.screens.profile.ProfileScreen
 import com.nestorian87.eter.ui.screens.profile.SettingsScreen
 import com.nestorian87.eter.ui.screens.profile.SubscriptionManagementScreen
 import com.nestorian87.eter.ui.screens.subscriptions.SubscriptionsScreen
-
 @Composable
 fun EterNavigation(
     navigationState: EterNavigationState,
@@ -62,7 +61,20 @@ fun EterNavigation(
                 )
             }
             entry<FeedKey> {
-                FeedScreen(modifier = modifier)
+                FeedScreen(
+                    modifier = modifier,
+                    onOpenPost = { postId ->
+                        navigationState.navigate(PostKey(postId = postId))
+                    },
+                    onOpenComments = { postId ->
+                        navigationState.navigate(
+                            PostKey(
+                                postId = postId,
+                                focusComments = true,
+                            ),
+                        )
+                    },
+                )
             }
             entry<SubscriptionsKey> {
                 SubscriptionsScreen(modifier = modifier)
@@ -99,8 +111,13 @@ fun EterNavigation(
             entry<LyricSyncKey> {
                 LyricSyncScreen(modifier = modifier)
             }
-            entry<PostKey> {
-                PostScreen(modifier = modifier)
+            entry<PostKey> { key ->
+                PostScreen(
+                    postId = key.postId,
+                    focusComments = key.focusComments,
+                    modifier = modifier,
+                    onBackClick = navigationState::pop,
+                )
             }
             entry<UserProfileKey> {
                 ProfileScreen(modifier = modifier)

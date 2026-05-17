@@ -103,6 +103,7 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.common.ktx)
     implementation(libs.io.coil.kt.coil.compose)
+    implementation(libs.io.coil.kt.coil.network.okhttp)
     implementation(platform(libs.com.google.firebase.bom))
     implementation(libs.com.google.firebase.messaging)
     implementation(libs.com.google.android.libraries.identity.googleid)

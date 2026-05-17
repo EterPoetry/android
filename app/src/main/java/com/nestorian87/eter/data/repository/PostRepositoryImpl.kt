@@ -2,13 +2,25 @@ package com.nestorian87.eter.data.repository
 
 import com.nestorian87.eter.data.mapper.toDomain
 import com.nestorian87.eter.data.remote.api.Api
+import com.nestorian87.eter.data.remote.dto.CreateCommentRequestDto
+import com.nestorian87.eter.data.remote.dto.ListenEndRequestDto
+import com.nestorian87.eter.data.remote.dto.ListenProgressRequestDto
+import com.nestorian87.eter.data.remote.dto.ListenStartRequestDto
 import com.nestorian87.eter.data.remote.dto.UpdatePostRequestDto
+import com.nestorian87.eter.domain.model.ListenEndResult
+import com.nestorian87.eter.domain.model.ListenProgressResult
+import com.nestorian87.eter.domain.model.ListenStartResult
 import com.nestorian87.eter.domain.model.MyPostsPage
 import com.nestorian87.eter.domain.model.MyPostsQuery
 import com.nestorian87.eter.domain.model.MyPostsSortBy
 import com.nestorian87.eter.domain.model.Post
 import com.nestorian87.eter.domain.model.PostCategory
+import com.nestorian87.eter.domain.model.PostComment
+import com.nestorian87.eter.domain.model.PostCommentsPage
+import com.nestorian87.eter.domain.model.PostCommentsQuery
+import com.nestorian87.eter.domain.model.PostCommentsSort
 import com.nestorian87.eter.domain.model.PostException
+import com.nestorian87.eter.domain.model.PopularPostsPage
 import com.nestorian87.eter.domain.model.PublicConfig
 import com.nestorian87.eter.domain.model.SortOrder
 import com.nestorian87.eter.domain.model.UpdatePostPayload
@@ -53,6 +65,20 @@ class PostRepositoryImpl @Inject constructor(
         api.getPost(postId = postId).toDomain()
     }
 
+    override suspend fun getPopularPosts(
+        snapshotId: String?,
+        cursor: String?,
+        limit: Int?,
+    ): PopularPostsPage = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toPopularPostsException,
+    ) {
+        api.getPopularPosts(
+            snapshotId = snapshotId,
+            cursor = cursor,
+            limit = limit,
+        ).toDomain()
+    }
+
     override suspend fun updatePost(postId: Long, payload: UpdatePostPayload): Post = executePostRequest(
         httpErrorMapper = serverErrorMapper::toUpdatePostException,
     ) {
@@ -87,6 +113,154 @@ class PostRepositoryImpl @Inject constructor(
             offset = query.offset,
             limit = query.limit,
         ).toDomain()
+    }
+
+    override suspend fun startListen(
+        postId: Long,
+        sessionId: String,
+    ): ListenStartResult = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        api.startListen(
+            postId = postId,
+            request = ListenStartRequestDto(sessionId = sessionId),
+        ).toDomain()
+    }
+
+    override suspend fun updateListenProgress(
+        postId: Long,
+        token: String,
+        positionMs: Int,
+    ): ListenProgressResult = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        api.updateListenProgress(
+            postId = postId,
+            request = ListenProgressRequestDto(
+                token = token,
+                positionMs = positionMs,
+            ),
+        ).toDomain()
+    }
+
+    override suspend fun endListen(
+        postId: Long,
+        token: String,
+        positionMs: Int,
+        sessionId: String?,
+    ): ListenEndResult = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        api.endListen(
+            postId = postId,
+            request = ListenEndRequestDto(
+                token = token,
+                positionMs = positionMs,
+                sessionId = sessionId,
+            ),
+        ).toDomain()
+    }
+
+    override suspend fun getPostComments(
+        postId: Long,
+        query: PostCommentsQuery,
+    ): PostCommentsPage = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        api.getPostComments(
+            postId = postId,
+            limit = query.limit,
+            cursor = query.cursor,
+            sort = query.sort?.toApiValue(),
+        ).toDomain()
+    }
+
+    override suspend fun getCommentReplies(
+        commentId: Long,
+        limit: Int?,
+        cursor: String?,
+    ): PostCommentsPage = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        api.getCommentReplies(
+            commentId = commentId,
+            limit = limit,
+            cursor = cursor,
+            sort = null,
+        ).toDomain()
+    }
+
+    override suspend fun createComment(
+        postId: Long,
+        commentText: String,
+        replyToCommentId: Long?,
+    ): PostComment = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        api.createComment(
+            postId = postId,
+            request = CreateCommentRequestDto(
+                commentText = commentText,
+                replyToCommentId = replyToCommentId,
+            ),
+        ).toDomain()
+    }
+
+    override suspend fun likePost(postId: Long): Int = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        val response = api.likePost(postId = postId)
+        if (!response.ok) {
+            throw PostException(reasons = setOf(PostException.Reason.UNKNOWN))
+        }
+        response.likesCount
+    }
+
+    override suspend fun unlikePost(postId: Long): Int = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        val response = api.unlikePost(postId = postId)
+        if (!response.ok) {
+            throw PostException(reasons = setOf(PostException.Reason.UNKNOWN))
+        }
+        response.likesCount
+    }
+
+    override suspend fun likeComment(commentId: Long): Int = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        val response = api.likeComment(commentId = commentId)
+        if (!response.ok) {
+            throw PostException(
+                reasons = setOf(PostException.Reason.UNKNOWN),
+            )
+        }
+        response.likesCount
+    }
+
+    override suspend fun unlikeComment(commentId: Long): Int = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        val response = api.unlikeComment(commentId = commentId)
+        if (!response.ok) {
+            throw PostException(
+                reasons = setOf(PostException.Reason.UNKNOWN),
+            )
+        }
+        response.likesCount
+    }
+
+    override suspend fun deleteComment(commentId: Long) {
+        executePostRequest(
+            httpErrorMapper = serverErrorMapper::toCommonException,
+        ) {
+            val response = api.deleteComment(commentId = commentId)
+            if (!response.ok) {
+                throw PostException(
+                    reasons = setOf(PostException.Reason.UNKNOWN),
+                )
+            }
+        }
     }
 
     override suspend fun deletePost(postId: Long) {
@@ -124,6 +298,12 @@ class PostRepositoryImpl @Inject constructor(
     private fun SortOrder.toApiValue(): String = when (this) {
         SortOrder.ASC -> "asc"
         SortOrder.DESC -> "desc"
+    }
+
+    private fun PostCommentsSort.toApiValue(): String = when (this) {
+        PostCommentsSort.NEWEST -> "newest"
+        PostCommentsSort.OLDEST -> "oldest"
+        PostCommentsSort.POPULAR -> "popular"
     }
 
     private companion object {

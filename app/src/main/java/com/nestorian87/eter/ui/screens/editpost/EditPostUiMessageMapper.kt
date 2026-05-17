@@ -23,6 +23,7 @@ fun PostException.Reason.toEditPostMessageResId(): Int = when (this) {
     PostException.Reason.AUDIO_DURATION_LIMIT_EXCEEDED -> R.string.publish_duration_limit_error
     PostException.Reason.POST_IS_STILL_PROCESSING -> R.string.publish_processing_error
     PostException.Reason.AUDIO_REPLACEMENT_NOT_ALLOWED -> R.string.publish_audio_replace_not_allowed
+    PostException.Reason.POPULAR_SNAPSHOT_EXPIRED -> R.string.publish_unexpected_error
     PostException.Reason.NOT_FOUND -> R.string.publish_post_not_found
     PostException.Reason.FORBIDDEN -> R.string.publish_forbidden_error
     PostException.Reason.UNKNOWN -> R.string.publish_unexpected_error

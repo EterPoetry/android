@@ -56,6 +56,22 @@ internal class PostServerErrorMapper(
         return toCommonException(error)
     }
 
+    fun toPopularPostsException(error: HttpException): Throwable {
+        val errorBody = error.parseErrorBody()
+
+        if (
+            error.code() == 409 &&
+            errorBody.hasErrorCode(POPULAR_SNAPSHOT_EXPIRED_CODE)
+        ) {
+            return PostException(
+                reasons = setOf(PostException.Reason.POPULAR_SNAPSHOT_EXPIRED),
+                cause = error,
+            )
+        }
+
+        return toCommonException(error)
+    }
+
     fun toCommonException(error: HttpException): Throwable {
         val errorBody = error.parseErrorBody()
         val fieldViolations = errorBody
@@ -85,6 +101,13 @@ internal class PostServerErrorMapper(
         }
 
         if (error.code() == 403) {
+            return PostException(
+                reasons = setOf(PostException.Reason.FORBIDDEN),
+                cause = error,
+            )
+        }
+
+        if (error.code() == 401) {
             return PostException(
                 reasons = setOf(PostException.Reason.FORBIDDEN),
                 cause = error,
@@ -155,6 +178,7 @@ internal class PostServerErrorMapper(
         const val AUDIO_DURATION_EXCEEDED_CODE = "audio_duration_exceeded"
         const val AUDIO_DURATION_EXCEEDED_PREFIX = "Audio duration exceeds"
         const val POST_IS_STILL_PROCESSING_CODE = "post_is_still_processing"
+        const val POPULAR_SNAPSHOT_EXPIRED_CODE = "popular_snapshot_expired"
         const val POST_IS_STILL_PROCESSING_MESSAGE =
             "Post is still processing and cannot be edited."
     }

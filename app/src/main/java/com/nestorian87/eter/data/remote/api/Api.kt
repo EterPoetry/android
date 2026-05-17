@@ -1,15 +1,27 @@
 package com.nestorian87.eter.data.remote.api
 
 import com.nestorian87.eter.data.remote.dto.AuthResponseDto
+import com.nestorian87.eter.data.remote.dto.CommentLikeResponseDto
+import com.nestorian87.eter.data.remote.dto.CreateCommentRequestDto
 import com.nestorian87.eter.data.remote.dto.DeletePostResponseDto
 import com.nestorian87.eter.data.remote.dto.EmailVerificationRequestDto
 import com.nestorian87.eter.data.remote.dto.EmailVerificationStatusDto
 import com.nestorian87.eter.data.remote.dto.ForgotPasswordRequestDto
 import com.nestorian87.eter.data.remote.dto.GoogleMobileAuthRequestDto
+import com.nestorian87.eter.data.remote.dto.ListenEndRequestDto
+import com.nestorian87.eter.data.remote.dto.ListenEndResponseDto
+import com.nestorian87.eter.data.remote.dto.ListenProgressRequestDto
+import com.nestorian87.eter.data.remote.dto.ListenProgressResponseDto
+import com.nestorian87.eter.data.remote.dto.ListenStartRequestDto
+import com.nestorian87.eter.data.remote.dto.ListenStartResponseDto
 import com.nestorian87.eter.data.remote.dto.LoginRequestDto
 import com.nestorian87.eter.data.remote.dto.MyPostsResponseDto
 import com.nestorian87.eter.data.remote.dto.PostCategoryDto
+import com.nestorian87.eter.data.remote.dto.PostCommentDto
+import com.nestorian87.eter.data.remote.dto.PostLikeResponseDto
+import com.nestorian87.eter.data.remote.dto.PostCommentsResponseDto
 import com.nestorian87.eter.data.remote.dto.PostDto
+import com.nestorian87.eter.data.remote.dto.PopularPostsResponseDto
 import com.nestorian87.eter.data.remote.dto.ProfileMeDto
 import com.nestorian87.eter.data.remote.dto.PublicConfigDto
 import com.nestorian87.eter.data.remote.dto.RegisterRequestDto
@@ -28,7 +40,6 @@ import retrofit2.http.Query
 
 interface Api {
 
-    @NoAuth
     @GET("config")
     suspend fun getPublicConfig(): PublicConfigDto
 
@@ -90,6 +101,13 @@ interface Api {
         @Path("postId") postId: Long,
     ): PostDto
 
+    @GET("posts/popular")
+    suspend fun getPopularPosts(
+        @Query("snapshotId") snapshotId: String? = null,
+        @Query("cursor") cursor: String? = null,
+        @Query("limit") limit: Int? = null,
+    ): PopularPostsResponseDto
+
     @PATCH("posts/{postId}")
     suspend fun updatePost(
         @Path("postId") postId: Long,
@@ -111,6 +129,71 @@ interface Api {
         @Query("offset") offset: Int? = null,
         @Query("limit") limit: Int? = null,
     ): MyPostsResponseDto
+
+    @POST("posts/{postId}/listen/start")
+    suspend fun startListen(
+        @Path("postId") postId: Long,
+        @Body request: ListenStartRequestDto,
+    ): ListenStartResponseDto
+
+    @POST("posts/{postId}/listen/progress")
+    suspend fun updateListenProgress(
+        @Path("postId") postId: Long,
+        @Body request: ListenProgressRequestDto,
+    ): ListenProgressResponseDto
+
+    @POST("posts/{postId}/listen/end")
+    suspend fun endListen(
+        @Path("postId") postId: Long,
+        @Body request: ListenEndRequestDto,
+    ): ListenEndResponseDto
+
+    @GET("posts/{postId}/comments")
+    suspend fun getPostComments(
+        @Path("postId") postId: Long,
+        @Query("limit") limit: Int? = null,
+        @Query("cursor") cursor: String? = null,
+        @Query("sort") sort: String? = null,
+    ): PostCommentsResponseDto
+
+    @GET("posts/comments/{commentId}/replies")
+    suspend fun getCommentReplies(
+        @Path("commentId") commentId: Long,
+        @Query("limit") limit: Int? = null,
+        @Query("cursor") cursor: String? = null,
+        @Query("sort") sort: String? = null,
+    ): PostCommentsResponseDto
+
+    @POST("posts/{postId}/like")
+    suspend fun likePost(
+        @Path("postId") postId: Long,
+    ): PostLikeResponseDto
+
+    @DELETE("posts/{postId}/like")
+    suspend fun unlikePost(
+        @Path("postId") postId: Long,
+    ): PostLikeResponseDto
+
+    @POST("posts/{postId}/comments")
+    suspend fun createComment(
+        @Path("postId") postId: Long,
+        @Body request: CreateCommentRequestDto,
+    ): PostCommentDto
+
+    @POST("posts/comments/{commentId}/like")
+    suspend fun likeComment(
+        @Path("commentId") commentId: Long,
+    ): CommentLikeResponseDto
+
+    @DELETE("posts/comments/{commentId}/like")
+    suspend fun unlikeComment(
+        @Path("commentId") commentId: Long,
+    ): CommentLikeResponseDto
+
+    @DELETE("posts/comments/{commentId}")
+    suspend fun deleteComment(
+        @Path("commentId") commentId: Long,
+    ): DeletePostResponseDto
 
     @DELETE("posts/{postId}")
     suspend fun deletePost(

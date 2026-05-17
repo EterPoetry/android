@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.nestorian87.eter.ui.theme.EterPreview
 import com.nestorian87.eter.ui.theme.EterScreenPreviews
@@ -34,7 +33,7 @@ private val NavItemRippleShape = RoundedCornerShape(20.dp)
 
 @Composable
 fun BottomNavBar(
-    currentTab: TopLevelDestination,
+    currentTab: TopLevelDestination?,
     onTabSelected: (TopLevelDestination) -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme

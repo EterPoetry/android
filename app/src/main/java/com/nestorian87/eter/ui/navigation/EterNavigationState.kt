@@ -9,7 +9,6 @@ import androidx.compose.runtime.setValue
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.rememberNavBackStack
-
 @Stable
 class EterNavigationState(
     initialAuthenticated: Boolean,
@@ -29,6 +28,13 @@ class EterNavigationState(
             authBackStack
         }
 
+    val selectedTab: TopLevelDestination?
+        get() = when (currentBackStack.lastOrNull()) {
+            is PostKey -> null
+            is TopLevelNavKey -> currentTab
+            else -> currentTab
+        }
+
     fun selectTab(destination: TopLevelDestination) {
         currentTab = destination
         val stack = mainBackStacks.getValue(destination)
@@ -43,6 +49,27 @@ class EterNavigationState(
 
     fun navigate(key: EterNavKey) {
         currentBackStack.add(key)
+    }
+
+    fun openPostFromExternal(
+        postId: Long,
+        focusComments: Boolean = false,
+    ) {
+        isAuthenticated = true
+        currentTab = TopLevelDestination.FEED
+        val stack = mainBackStacks.getValue(TopLevelDestination.FEED)
+        while (stack.size > 1) {
+            stack.removeLastOrNull()
+        }
+        val nextPostKey = PostKey(
+            postId = postId,
+            focusComments = focusComments,
+        )
+        val currentTop = stack.lastOrNull()
+        if (currentTop is PostKey && currentTop.postId == postId && currentTop.focusComments == focusComments) {
+            stack.removeLastOrNull()
+        }
+        stack.add(nextPostKey)
     }
 
     fun pop(): Boolean {
