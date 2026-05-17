@@ -3,8 +3,7 @@ package com.nestorian87.eter.ui.screens.post
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,9 +21,10 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,11 +51,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -78,7 +78,6 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -87,41 +86,54 @@ import com.nestorian87.eter.domain.model.Post
 import com.nestorian87.eter.domain.model.PostCommentsSort
 import com.nestorian87.eter.domain.model.PostException
 import com.nestorian87.eter.domain.model.ServerValidationException
+import com.nestorian87.eter.ui.components.AuthorInfoRow
 import com.nestorian87.eter.ui.components.CategoryChip
-import com.nestorian87.eter.ui.components.shimmer
-import com.nestorian87.eter.ui.components.toDurationText
-import com.nestorian87.eter.ui.theme.PillShape
-import com.nestorian87.eter.ui.components.AuthorAvatar
+import com.nestorian87.eter.ui.components.EterConfirmationDialog
 import com.nestorian87.eter.ui.components.EterLoadingIndicator
+import com.nestorian87.eter.ui.components.PrimaryActionButton
+import com.nestorian87.eter.ui.components.SecondaryActionButton
+import com.nestorian87.eter.ui.components.shimmer
 import com.nestorian87.eter.ui.components.toCompactCountText
+import com.nestorian87.eter.ui.components.toDurationText
 import com.nestorian87.eter.ui.theme.EterPreview
 import com.nestorian87.eter.ui.theme.EterScreenPreviews
 import com.nestorian87.eter.ui.theme.EterSpacing
+import com.nestorian87.eter.ui.theme.PillShape
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun PostScreen(
+    modifier: Modifier = Modifier,
     postId: Long,
     focusComments: Boolean = false,
-    modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
+    onEditPost: (Long) -> Unit = {},
+    onPostDeleted: () -> Unit = {},
+    onCategoryClick: ((Long) -> Unit)? = null,
     viewModel: PostViewModel = hiltViewModel<PostViewModel, PostViewModel.Factory> { factory ->
         factory.create(postId)
     },
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(uiState.isPostDeleted) {
+        if (uiState.isPostDeleted) {
+            onPostDeleted()
+        }
+    }
     PostScreenContent(
         uiState = uiState,
         focusComments = focusComments,
         modifier = modifier,
         onBackClick = onBackClick,
+        onEditPost = onEditPost,
+        onDeletePost = viewModel::onDeletePost,
         onRetryLoadPost = viewModel::retryLoadPost,
         onTogglePostLike = viewModel::onTogglePostLike,
         onPlayPost = viewModel::onPlayPost,
@@ -138,6 +150,7 @@ fun PostScreen(
         onSendReply = viewModel::onSendReply,
         onToggleReplies = viewModel::onToggleReplies,
         onLoadMoreReplies = viewModel::onLoadMoreReplies,
+        onCategoryClick = onCategoryClick,
     )
 }
 
@@ -148,6 +161,8 @@ private fun PostScreenContent(
     focusComments: Boolean,
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit,
+    onEditPost: (Long) -> Unit,
+    onDeletePost: () -> Unit,
     onRetryLoadPost: () -> Unit,
     onTogglePostLike: () -> Unit,
     onPlayPost: () -> Unit,
@@ -164,10 +179,12 @@ private fun PostScreenContent(
     onSendReply: (Long) -> Unit,
     onToggleReplies: (Long) -> Unit,
     onLoadMoreReplies: (Long) -> Unit,
+    onCategoryClick: ((Long) -> Unit)? = null,
 ) {
     val mobileBreakpointPx = with(LocalDensity.current) { MOBILE_BREAKPOINT_DP.dp.roundToPx() }
     val isMobile = LocalWindowInfo.current.containerSize.width <= mobileBreakpointPx
     var isCommentsSheetOpen by rememberSaveable { mutableStateOf(false) }
+    var isDeleteDialogVisible by rememberSaveable { mutableStateOf(false) }
     val commentsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(isMobile) {
@@ -200,11 +217,25 @@ private fun PostScreenContent(
         ) {
             when {
                 uiState.isLoadingPost -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        EterLoadingIndicator()
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        IconButton(
+                            onClick = onBackClick,
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(horizontal = EterSpacing.xxLarge, vertical = EterSpacing.section),
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                contentDescription = stringResource(R.string.navigation_back),
+                                tint = MaterialTheme.colorScheme.onBackground,
+                            )
+                        }
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            EterLoadingIndicator()
+                        }
                     }
                 }
 
@@ -235,13 +266,17 @@ private fun PostScreenContent(
 
                         PostHeaderCard(
                             post = post,
+                            currentUserId = uiState.currentUserId,
                             isPostLiked = uiState.isPostLiked,
                             isPostLikePending = uiState.pendingPostLike,
                             isCurrentPostPlaying = uiState.isCurrentPostPlaying,
                             onTogglePostLike = onTogglePostLike,
                             onPlayPost = onPlayPost,
                             onOpenComments = { isCommentsSheetOpen = true },
+                            onEditPost = { onEditPost(post.postId) },
+                            onDeletePost = { isDeleteDialogVisible = true },
                             isMobile = isMobile,
+                            onCategoryClick = onCategoryClick,
                         )
 
                         if (!post.text.isNullOrBlank()) {
@@ -312,20 +347,38 @@ private fun PostScreenContent(
             )
         }
     }
+
+    if (isDeleteDialogVisible) {
+        EterConfirmationDialog(
+            title = stringResource(R.string.post_delete_title),
+            message = stringResource(R.string.post_delete_message),
+            confirmText = stringResource(R.string.post_delete_confirm),
+            confirmIcon = Icons.Rounded.DeleteOutline,
+            isConfirmLoading = uiState.isDeletingPost,
+            errorMessage = uiState.postActionError?.let { stringResource(it.toPostMessageResId()) },
+            onConfirm = onDeletePost,
+            onDismiss = {},
+        )
+    }
 }
 
 @Composable
 private fun PostHeaderCard(
     post: Post,
+    currentUserId: Long?,
     isPostLiked: Boolean,
     isPostLikePending: Boolean,
     isCurrentPostPlaying: Boolean,
     onTogglePostLike: () -> Unit,
     onPlayPost: () -> Unit,
     onOpenComments: () -> Unit,
+    onEditPost: () -> Unit,
+    onDeletePost: () -> Unit,
     isMobile: Boolean,
+    onCategoryClick: ((Long) -> Unit)? = null,
 ) {
-    val displayAuthorName = post.author?.username ?: stringResource(R.string.post_unknown_author)
+    val displayAuthorName = post.author?.name ?: stringResource(R.string.post_unknown_author)
+    val isOwnedByCurrentUser = currentUserId != null && currentUserId == post.authorId
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -400,17 +453,11 @@ private fun PostHeaderCard(
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
-                        AuthorAvatar(
+                        AuthorInfoRow(
                             name = displayAuthorName,
+                            username = post.author?.username,
                             photoUrl = post.author?.photo,
-                            size = 32.dp,
-                        )
-                        Text(
-                            text = displayAuthorName,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                            avatarSize = 32.dp,
                         )
                     }
                 }
@@ -465,8 +512,25 @@ private fun PostHeaderCard(
                     horizontalArrangement = Arrangement.spacedBy(EterSpacing.xSmall),
                 ) {
                     post.categories.forEach { category ->
-                        CategoryChip(name = category.categoryName)
+                        CategoryChip(
+                            name = category.categoryName,
+                            onClick = onCategoryClick?.let { { it(category.categoryId) } },
+                        )
                     }
+                }
+            }
+
+            if (isOwnedByCurrentUser) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(EterSpacing.small),
+                ) {
+                    PrimaryActionButton(text = stringResource(R.string.post_edit), onClick = onEditPost)
+                    SecondaryActionButton(
+                        text = stringResource(R.string.post_delete),
+                        outlineColor = MaterialTheme.colorScheme.error,
+                        onClick = onDeletePost,
+                    )
                 }
             }
 
@@ -810,19 +874,17 @@ private fun CommentItem(
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(EterSpacing.small),
             ) {
-                AuthorAvatar(
-                    name = item.comment.author?.username.orEmpty(),
-                    photoUrl = item.comment.author?.photo,
-                    size = if (isReply) 28.dp else 32.dp,
-                )
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
-                    Text(
-                        text = item.comment.author?.username ?: stringResource(R.string.post_unknown_author),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface,
+                    AuthorInfoRow(
+                        name = item.comment.author?.name
+                            ?: item.comment.author?.username
+                            ?: stringResource(R.string.post_unknown_author),
+                        username = item.comment.author?.username,
+                        photoUrl = item.comment.author?.photo,
+                        avatarSize = if (isReply) 28.dp else 32.dp,
                     )
                     item.comment.createdAt?.takeIf { it.isNotBlank() }?.let { createdAt ->
                         Text(

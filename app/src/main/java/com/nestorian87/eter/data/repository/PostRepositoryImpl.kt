@@ -20,6 +20,10 @@ import com.nestorian87.eter.domain.model.PostCommentsPage
 import com.nestorian87.eter.domain.model.PostCommentsQuery
 import com.nestorian87.eter.domain.model.PostCommentsSort
 import com.nestorian87.eter.domain.model.PostException
+import com.nestorian87.eter.domain.model.PostFeedPage
+import com.nestorian87.eter.domain.model.PostListPage
+import com.nestorian87.eter.domain.model.PostSearchQuery
+import com.nestorian87.eter.domain.model.PostSearchSortBy
 import com.nestorian87.eter.domain.model.PopularPostsPage
 import com.nestorian87.eter.domain.model.PublicConfig
 import com.nestorian87.eter.domain.model.SortOrder
@@ -75,6 +79,42 @@ class PostRepositoryImpl @Inject constructor(
         api.getPopularPosts(
             snapshotId = snapshotId,
             cursor = cursor,
+            limit = limit,
+        ).toDomain()
+    }
+
+    override suspend fun searchPosts(query: PostSearchQuery): PostListPage = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        api.searchPosts(
+            search = query.search,
+            categoryId = query.categoryId,
+            sortBy = query.sortBy.toApiValue(),
+            offset = query.offset,
+            limit = query.limit,
+        ).toDomain()
+    }
+
+    override suspend fun getSubscriptionFeed(
+        cursor: String?,
+        limit: Int?,
+    ): PostFeedPage = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        api.getSubscriptionFeed(
+            cursor = cursor,
+            limit = limit,
+        ).toDomain()
+    }
+
+    override suspend fun getLikedPosts(
+        offset: Int?,
+        limit: Int?,
+    ): PostListPage = executePostRequest(
+        httpErrorMapper = serverErrorMapper::toCommonException,
+    ) {
+        api.getLikedPosts(
+            offset = offset,
             limit = limit,
         ).toDomain()
     }
@@ -304,6 +344,12 @@ class PostRepositoryImpl @Inject constructor(
         PostCommentsSort.NEWEST -> "newest"
         PostCommentsSort.OLDEST -> "oldest"
         PostCommentsSort.POPULAR -> "popular"
+    }
+
+    private fun PostSearchSortBy.toApiValue(): String = when (this) {
+        PostSearchSortBy.NEWEST -> "newest"
+        PostSearchSortBy.OLDEST -> "oldest"
+        PostSearchSortBy.POPULAR -> "popular"
     }
 
     private companion object {

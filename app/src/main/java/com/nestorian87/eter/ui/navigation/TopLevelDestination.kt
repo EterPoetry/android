@@ -6,6 +6,7 @@ import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.RemoveRedEye
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.nestorian87.eter.R
@@ -14,8 +15,10 @@ enum class TopLevelDestination(
     @param:StringRes val labelRes: Int,
     val icon: ImageVector,
     val navKey: TopLevelNavKey,
+    val showInBottomBar: Boolean = true,
 ) {
     FEED(R.string.feed, Icons.Outlined.Home, FeedKey),
+    SEARCH(R.string.search, Icons.Outlined.Search, SearchKey, showInBottomBar = false),
     SUBSCRIPTIONS(R.string.following, Icons.Outlined.RemoveRedEye, SubscriptionsKey),
     CREATE(R.string.create, Icons.Rounded.Add, CreateKey()),
     FAVORITES(R.string.favorites, Icons.Outlined.FavoriteBorder, FavoritesKey),

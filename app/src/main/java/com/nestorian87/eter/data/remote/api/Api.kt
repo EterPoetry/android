@@ -21,6 +21,8 @@ import com.nestorian87.eter.data.remote.dto.PostCommentDto
 import com.nestorian87.eter.data.remote.dto.PostLikeResponseDto
 import com.nestorian87.eter.data.remote.dto.PostCommentsResponseDto
 import com.nestorian87.eter.data.remote.dto.PostDto
+import com.nestorian87.eter.data.remote.dto.PostFeedResponseDto
+import com.nestorian87.eter.data.remote.dto.PostListResponseDto
 import com.nestorian87.eter.data.remote.dto.PopularPostsResponseDto
 import com.nestorian87.eter.data.remote.dto.ProfileMeDto
 import com.nestorian87.eter.data.remote.dto.PublicConfigDto
@@ -107,6 +109,27 @@ interface Api {
         @Query("cursor") cursor: String? = null,
         @Query("limit") limit: Int? = null,
     ): PopularPostsResponseDto
+
+    @GET("posts/search")
+    suspend fun searchPosts(
+        @Query("search") search: String? = null,
+        @Query("categoryId") categoryId: Long? = null,
+        @Query("sortBy") sortBy: String? = null,
+        @Query("offset") offset: Int? = null,
+        @Query("limit") limit: Int? = null,
+    ): PostListResponseDto
+
+    @GET("posts/feed")
+    suspend fun getSubscriptionFeed(
+        @Query("cursor") cursor: String? = null,
+        @Query("limit") limit: Int? = null,
+    ): PostFeedResponseDto
+
+    @GET("posts/liked")
+    suspend fun getLikedPosts(
+        @Query("offset") offset: Int? = null,
+        @Query("limit") limit: Int? = null,
+    ): PostListResponseDto
 
     @PATCH("posts/{postId}")
     suspend fun updatePost(

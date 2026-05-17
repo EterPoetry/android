@@ -30,4 +30,7 @@ data class PostUiState(
     val isCurrentPostActive: Boolean = false,
     val isCurrentPostPlaying: Boolean = false,
     val currentPlaybackTimeMs: Long = 0L,
+    val isDeletingPost: Boolean = false,
+    val isPostDeleted: Boolean = false,
+    val postActionError: Throwable? = null,
 )

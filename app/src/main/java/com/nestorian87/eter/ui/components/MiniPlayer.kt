@@ -89,7 +89,8 @@ private fun MiniPlayerContent(
         mutableFloatStateOf(progressPercent.coerceIn(0f, 100f))
     }
     var isSeeking by remember(post.postId) { androidx.compose.runtime.mutableStateOf(false) }
-    val authorName = post.author?.username ?: stringResource(R.string.post_unknown_author)
+    val authorName = post.author?.name ?: stringResource(R.string.post_unknown_author)
+    val authorUsername = post.author?.username
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -147,10 +148,19 @@ private fun MiniPlayerContent(
                     Text(
                         text = authorName,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    if (authorUsername != null) {
+                        Text(
+                            text = "@$authorUsername",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
                 // Action buttons — stop propagation via individual click handlers
                 Row(

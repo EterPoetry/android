@@ -21,6 +21,10 @@ class EterNavigationState(
     var currentTab by mutableStateOf(TopLevelDestination.FEED)
         private set
 
+    var pendingSearchCategoryId: Long? by mutableStateOf(null)
+        private set
+    private var searchReturnTab: TopLevelDestination? by mutableStateOf(null)
+
     val currentBackStack: NavBackStack<NavKey>
         get() = if (isAuthenticated) {
             mainBackStacks.getValue(currentTab)
@@ -36,15 +40,41 @@ class EterNavigationState(
         }
 
     fun selectTab(destination: TopLevelDestination) {
+        val previousTab = currentTab
+        if (destination != TopLevelDestination.SEARCH) {
+            searchReturnTab = null
+        }
         currentTab = destination
         val stack = mainBackStacks.getValue(destination)
         if (destination == TopLevelDestination.CREATE && stack.any { it !is CreateKey }) {
             resetCreateStack(stack)
             return
         }
+        if (previousTab == destination && stack.size > 1) {
+            while (stack.size > 1) {
+                stack.removeLastOrNull()
+            }
+            return
+        }
         if (stack.isEmpty()) {
             stack.add(rootKeyFor(destination))
         }
+    }
+
+    fun openSearchWithCategory(categoryId: Long) {
+        pendingSearchCategoryId = categoryId
+        openSearch()
+    }
+
+    fun openSearch() {
+        if (currentTab != TopLevelDestination.SEARCH) {
+            searchReturnTab = currentTab
+        }
+        selectTab(TopLevelDestination.SEARCH)
+    }
+
+    fun clearPendingSearchCategory() {
+        pendingSearchCategoryId = null
     }
 
     fun navigate(key: EterNavKey) {
@@ -76,6 +106,12 @@ class EterNavigationState(
         val stack = currentBackStack
         return if (stack.size > 1) {
             stack.removeLastOrNull()
+            true
+        } else if (isAuthenticated && currentTab == TopLevelDestination.SEARCH) {
+            val returnTab = searchReturnTab ?: TopLevelDestination.FEED
+            pendingSearchCategoryId = null
+            searchReturnTab = null
+            selectTab(returnTab)
             true
         } else {
             false
@@ -113,6 +149,7 @@ fun rememberEterNavigationState(
 ): EterNavigationState {
     val authBackStack = rememberNavBackStack(LoginKey)
     val feedBackStack = rememberNavBackStack(FeedKey)
+    val searchBackStack = rememberNavBackStack(SearchKey)
     val subscriptionsBackStack = rememberNavBackStack(SubscriptionsKey)
     val createBackStack = rememberNavBackStack(CreateKey())
     val favoritesBackStack = rememberNavBackStack(FavoritesKey)
@@ -121,6 +158,7 @@ fun rememberEterNavigationState(
     return remember(
         authBackStack,
         feedBackStack,
+        searchBackStack,
         subscriptionsBackStack,
         createBackStack,
         favoritesBackStack,
@@ -132,6 +170,7 @@ fun rememberEterNavigationState(
             authBackStack = authBackStack,
             mainBackStacks = mapOf(
                 TopLevelDestination.FEED to feedBackStack,
+                TopLevelDestination.SEARCH to searchBackStack,
                 TopLevelDestination.SUBSCRIPTIONS to subscriptionsBackStack,
                 TopLevelDestination.CREATE to createBackStack,
                 TopLevelDestination.FAVORITES to favoritesBackStack,

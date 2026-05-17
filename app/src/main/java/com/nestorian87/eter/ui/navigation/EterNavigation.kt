@@ -22,6 +22,7 @@ import com.nestorian87.eter.ui.screens.profile.FollowersScreen
 import com.nestorian87.eter.ui.screens.profile.ProfileScreen
 import com.nestorian87.eter.ui.screens.profile.SettingsScreen
 import com.nestorian87.eter.ui.screens.profile.SubscriptionManagementScreen
+import com.nestorian87.eter.ui.screens.search.SearchScreen
 import com.nestorian87.eter.ui.screens.subscriptions.SubscriptionsScreen
 @Composable
 fun EterNavigation(
@@ -74,10 +75,53 @@ fun EterNavigation(
                             ),
                         )
                     },
+                    onCategoryClick = { categoryId ->
+                        navigationState.openSearchWithCategory(categoryId)
+                    },
+                    onOpenSearch = {
+                        navigationState.openSearch()
+                    },
+                )
+            }
+            entry<SearchKey> {
+                SearchScreen(
+                    modifier = modifier,
+                    onOpenPost = { postId ->
+                        navigationState.navigate(PostKey(postId = postId))
+                    },
+                    onOpenComments = { postId ->
+                        navigationState.navigate(
+                            PostKey(
+                                postId = postId,
+                                focusComments = true,
+                            ),
+                        )
+                    },
+                    onCategoryClick = { categoryId ->
+                        navigationState.openSearchWithCategory(categoryId)
+                    },
+                    pendingCategoryId = navigationState.pendingSearchCategoryId,
+                    onPendingCategoryConsumed = navigationState::clearPendingSearchCategory,
                 )
             }
             entry<SubscriptionsKey> {
-                SubscriptionsScreen(modifier = modifier)
+                SubscriptionsScreen(
+                    modifier = modifier,
+                    onOpenPost = { postId ->
+                        navigationState.navigate(PostKey(postId = postId))
+                    },
+                    onOpenComments = { postId ->
+                        navigationState.navigate(
+                            PostKey(
+                                postId = postId,
+                                focusComments = true,
+                            ),
+                        )
+                    },
+                    onCategoryClick = { categoryId ->
+                        navigationState.openSearchWithCategory(categoryId)
+                    },
+                )
             }
             entry<CreateKey> {
                 RecordAudioScreen(
@@ -88,7 +132,23 @@ fun EterNavigation(
                 )
             }
             entry<FavoritesKey> {
-                FavoritesScreen(modifier = modifier)
+                FavoritesScreen(
+                    modifier = modifier,
+                    onOpenPost = { postId ->
+                        navigationState.navigate(PostKey(postId = postId))
+                    },
+                    onOpenComments = { postId ->
+                        navigationState.navigate(
+                            PostKey(
+                                postId = postId,
+                                focusComments = true,
+                            ),
+                        )
+                    },
+                    onCategoryClick = { categoryId ->
+                        navigationState.openSearchWithCategory(categoryId)
+                    },
+                )
             }
             entry<ProfileKey> {
                 ProfileScreen(modifier = modifier)
@@ -106,6 +166,13 @@ fun EterNavigation(
                     postId = key.postId,
                     modifier = modifier,
                     onBackClick = navigationState::pop,
+                    onPostDeleted = {
+                        navigationState.pop()
+                        val previousKey = navigationState.currentBackStack.lastOrNull()
+                        if (previousKey is PostKey && previousKey.postId == key.postId) {
+                            navigationState.pop()
+                        }
+                    },
                 )
             }
             entry<LyricSyncKey> {
@@ -117,6 +184,13 @@ fun EterNavigation(
                     focusComments = key.focusComments,
                     modifier = modifier,
                     onBackClick = navigationState::pop,
+                    onEditPost = { postId ->
+                        navigationState.navigate(EditPostKey(postId = postId))
+                    },
+                    onPostDeleted = navigationState::pop,
+                    onCategoryClick = { categoryId ->
+                        navigationState.openSearchWithCategory(categoryId)
+                    },
                 )
             }
             entry<UserProfileKey> {

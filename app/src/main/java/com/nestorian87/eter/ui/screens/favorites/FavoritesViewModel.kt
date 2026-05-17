@@ -1,13 +1,13 @@
-package com.nestorian87.eter.ui.screens.feed
+package com.nestorian87.eter.ui.screens.favorites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nestorian87.eter.data.repository.PostInteractionStore
 import com.nestorian87.eter.data.repository.PostLikeController
 import com.nestorian87.eter.domain.model.Post
-import com.nestorian87.eter.domain.model.PostException
 import com.nestorian87.eter.domain.repository.PostRepository
 import com.nestorian87.eter.ui.components.PostCardUiModel
+import com.nestorian87.eter.ui.screens.feed.PostListUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -19,19 +19,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class FeedViewModel @Inject constructor(
+class FavoritesViewModel @Inject constructor(
     private val postRepository: PostRepository,
     private val postInteractionStore: PostInteractionStore,
     private val postLikeController: PostLikeController,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(FeedUiState())
-    val uiState: StateFlow<FeedUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(FavoritesUiState())
+    val uiState: StateFlow<FavoritesUiState> = _uiState.asStateFlow()
 
     private var loadJob: Job? = null
-    private var didResetOnSnapshotExpired = false
     private var sourcePosts: List<Post> = emptyList()
-    private var popularSnapshotId: String? = null
-    private var popularNextCursor: String? = null
+    private var offset = 0
 
     init {
         observePostInteractions()
@@ -39,13 +37,9 @@ class FeedViewModel @Inject constructor(
     }
 
     fun loadInitial() {
-        if (loadJob?.isActive == true) {
-            loadJob?.cancel()
-        }
-
+        loadJob?.cancel()
         sourcePosts = emptyList()
-        popularSnapshotId = null
-        popularNextCursor = null
+        offset = 0
         _uiState.update {
             it.copy(
                 posts = PostListUiState(
@@ -81,13 +75,15 @@ class FeedViewModel @Inject constructor(
     private fun observePostInteractions() {
         viewModelScope.launch {
             postInteractionStore.overrides.collect { overrides ->
+                val visiblePosts = sourcePosts.filter { post ->
+                    val override = overrides[post.postId]
+                    override == null || override.isLikePending || override.isLiked != false
+                }
                 _uiState.update { current ->
                     current.copy(
                         posts = current.posts.copy(
-                            items = mapUiItems(sourcePosts),
-                            pendingLikePostIds = overrides
-                                .filterValues { it.isLikePending }
-                                .keys,
+                            items = mapUiItems(visiblePosts),
+                            pendingLikePostIds = overrides.filterValues { it.isLikePending }.keys,
                         ),
                     )
                 }
@@ -97,62 +93,41 @@ class FeedViewModel @Inject constructor(
 
     private fun loadPage(reset: Boolean) {
         loadJob = viewModelScope.launch {
-            loadPopularPage(reset = reset)
-        }
-    }
-
-    private suspend fun loadPopularPage(reset: Boolean) {
-        runCatching {
-            postRepository.getPopularPosts(
-                snapshotId = if (reset) null else popularSnapshotId,
-                cursor = if (reset) null else popularNextCursor,
-                limit = PAGE_SIZE,
-            )
-        }.onSuccess { page ->
-            didResetOnSnapshotExpired = false
-            val mergedItems = if (reset) {
-                page.items
-            } else {
-                sourcePosts + page.items
-            }
-            sourcePosts = mergedItems.distinctBy(Post::postId)
-            popularSnapshotId = page.snapshotId
-            popularNextCursor = page.nextCursor
-
-            _uiState.update { state ->
-                state.copy(
-                    posts = state.posts.copy(
-                        items = mapUiItems(sourcePosts),
-                        isInitialLoading = false,
-                        isLoadingMore = false,
-                        canLoadMore = page.hasMore,
-                        error = null,
-                    ),
+            runCatching {
+                postRepository.getLikedPosts(
+                    offset = if (reset) 0 else offset,
+                    limit = PAGE_SIZE,
                 )
-            }
-        }.onFailure { error ->
-            if (error is CancellationException) {
-                throw error
-            }
+            }.onSuccess { page ->
+                val mergedItems = if (reset) page.items else sourcePosts + page.items
+                sourcePosts = mergedItems.distinctBy(Post::postId)
+                offset = page.offset + page.items.size
 
-            if (
-                error is PostException &&
-                error.primaryReason == PostException.Reason.POPULAR_SNAPSHOT_EXPIRED &&
-                !didResetOnSnapshotExpired
-            ) {
-                didResetOnSnapshotExpired = true
-                loadInitial()
-                return
-            }
+                _uiState.update { state ->
+                    state.copy(
+                        posts = state.posts.copy(
+                            items = mapUiItems(sourcePosts),
+                            isInitialLoading = false,
+                            isLoadingMore = false,
+                            canLoadMore = sourcePosts.size < page.total,
+                            error = null,
+                        ),
+                    )
+                }
+            }.onFailure { error ->
+                if (error is CancellationException) {
+                    throw error
+                }
 
-            _uiState.update { state ->
-                state.copy(
-                    posts = state.posts.copy(
-                        isInitialLoading = false,
-                        isLoadingMore = false,
-                        error = error,
-                    ),
-                )
+                _uiState.update { state ->
+                    state.copy(
+                        posts = state.posts.copy(
+                            isInitialLoading = false,
+                            isLoadingMore = false,
+                            error = error,
+                        ),
+                    )
+                }
             }
         }
     }
@@ -165,7 +140,7 @@ class FeedViewModel @Inject constructor(
         )
     }
 
-    companion object {
-        private const val PAGE_SIZE = 12
+    private companion object {
+        const val PAGE_SIZE = 12
     }
 }

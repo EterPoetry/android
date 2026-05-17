@@ -1,7 +1,10 @@
 package com.nestorian87.eter.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -17,6 +20,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.nestorian87.eter.ui.theme.EterSpacing
 
 @Composable
 fun AuthorAvatar(
@@ -61,6 +65,41 @@ fun AuthorAvatar(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Clip,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AuthorInfoRow(
+    name: String,
+    username: String?,
+    photoUrl: String?,
+    modifier: Modifier = Modifier,
+    avatarSize: Dp = 36.dp,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(EterSpacing.small),
+    ) {
+        AuthorAvatar(name = name, photoUrl = photoUrl, size = avatarSize)
+        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(
+                text = name,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (username != null) {
+                Text(
+                    text = "@$username",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

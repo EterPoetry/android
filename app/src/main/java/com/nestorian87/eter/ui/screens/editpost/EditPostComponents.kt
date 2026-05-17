@@ -435,29 +435,43 @@ fun EditPostActionButtons(
     uiState: EditPostUiState,
     onBackClick: () -> Unit,
     onSaveClick: () -> Unit,
+    onDeleteDraftClick: () -> Unit,
 ) {
-    Row(
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(EterSpacing.medium),
+    Column(
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(EterSpacing.medium),
     ) {
-        SecondaryActionButton(
-            text = stringResource(R.string.publish_back_cta),
-            modifier = Modifier.weight(1f),
-            enabled = !uiState.isSubmitting && !uiState.isReplacingAudio,
-            onClick = onBackClick,
-        )
-        PrimaryActionButton(
-            text = stringResource(
-                if (uiState.postStatus == com.nestorian87.eter.domain.model.PostStatus.PUBLISHED) {
-                    R.string.publish_update_cta
-                } else {
-                    R.string.publish_submit_cta
-                },
-            ),
-            modifier = Modifier.weight(1f),
-            enabled = uiState.canSave,
-            isLoading = uiState.isSubmitting,
-            onClick = onSaveClick,
-        )
+        if (uiState.postStatus == com.nestorian87.eter.domain.model.PostStatus.DRAFT) {
+            SecondaryActionButton(
+                text = stringResource(R.string.publish_delete_draft_cta),
+                modifier = Modifier.fillMaxWidth(),
+                enabled = uiState.canDeleteDraft,
+                onClick = onDeleteDraftClick,
+            )
+        }
+
+        Row(
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(EterSpacing.medium),
+        ) {
+            SecondaryActionButton(
+                text = stringResource(R.string.publish_back_cta),
+                modifier = Modifier.weight(1f),
+                enabled = !uiState.isSubmitting && !uiState.isReplacingAudio && !uiState.isDeleting,
+                onClick = onBackClick,
+            )
+            PrimaryActionButton(
+                text = stringResource(
+                    if (uiState.postStatus == com.nestorian87.eter.domain.model.PostStatus.PUBLISHED) {
+                        R.string.publish_update_cta
+                    } else {
+                        R.string.publish_submit_cta
+                    },
+                ),
+                modifier = Modifier.weight(1f),
+                enabled = uiState.canSave,
+                isLoading = uiState.isSubmitting,
+                onClick = onSaveClick,
+            )
+        }
     }
 }
 

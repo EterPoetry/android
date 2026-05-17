@@ -54,6 +54,40 @@ class PostViewModel @AssistedInject constructor(
         loadPost()
     }
 
+    fun onDeletePost() {
+        val currentPost = _uiState.value.post ?: return
+        if (_uiState.value.isDeletingPost) {
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                isDeletingPost = true,
+                postActionError = null,
+            )
+        }
+
+        viewModelScope.launch {
+            runCatching {
+                postRepository.deletePost(postId = currentPost.postId)
+            }.onSuccess {
+                _uiState.update {
+                    it.copy(
+                        isDeletingPost = false,
+                        isPostDeleted = true,
+                    )
+                }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isDeletingPost = false,
+                        postActionError = error,
+                    )
+                }
+            }
+        }
+    }
+
     fun loadMoreComments() {
         val state = _uiState.value
         if (
@@ -378,6 +412,7 @@ class PostViewModel @AssistedInject constructor(
             it.copy(
                 isLoadingPost = true,
                 postError = null,
+                postActionError = null,
             )
         }
 

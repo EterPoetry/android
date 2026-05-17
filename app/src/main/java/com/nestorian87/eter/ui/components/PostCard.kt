@@ -50,6 +50,7 @@ fun PostCard(
     onOpenPost: () -> Unit,
     onOpenComments: () -> Unit,
     modifier: Modifier = Modifier,
+    onCategoryClick: ((Long) -> Unit)? = null,
 ) {
     val post = item.post
 
@@ -91,7 +92,8 @@ fun PostCard(
 
                         PostCardAuthorLine(
                             originAuthorName = post.originAuthorName,
-                            authorName = post.author?.username ?: stringResource(R.string.post_unknown_author),
+                            authorName = post.author?.name ?: stringResource(R.string.post_unknown_author),
+                            authorUsername = post.author?.username,
                             authorPhotoUrl = post.author?.photo,
                         )
 
@@ -103,7 +105,10 @@ fun PostCard(
                                 horizontalArrangement = Arrangement.spacedBy(EterSpacing.xSmall),
                             ) {
                                 post.categories.forEach { category ->
-                                    CategoryChip(name = category.categoryName)
+                                    CategoryChip(
+                                        name = category.categoryName,
+                                        onClick = onCategoryClick?.let { { it(category.categoryId) } },
+                                    )
                                 }
                             }
                         }
@@ -189,7 +194,8 @@ fun PostCard(
 
                     PostCardAuthorLine(
                         originAuthorName = post.originAuthorName,
-                        authorName = post.author?.username ?: stringResource(R.string.post_unknown_author),
+                        authorName = post.author?.name ?: stringResource(R.string.post_unknown_author),
+                        authorUsername = post.author?.username,
                         authorPhotoUrl = post.author?.photo,
                     )
 
@@ -208,7 +214,10 @@ fun PostCard(
                             horizontalArrangement = Arrangement.spacedBy(EterSpacing.xSmall),
                         ) {
                             post.categories.forEach { category ->
-                                CategoryChip(name = category.categoryName)
+                                CategoryChip(
+                                    name = category.categoryName,
+                                    onClick = onCategoryClick?.let { { it(category.categoryId) } },
+                                )
                             }
                         }
                     }
@@ -267,6 +276,7 @@ fun PostCard(
 private fun PostCardAuthorLine(
     originAuthorName: String?,
     authorName: String,
+    authorUsername: String?,
     authorPhotoUrl: String?,
 ) {
     Row(
@@ -287,17 +297,11 @@ private fun PostCardAuthorLine(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        AuthorAvatar(
+        AuthorInfoRow(
             name = authorName,
+            username = authorUsername,
             photoUrl = authorPhotoUrl,
-            size = 26.dp,
-        )
-        Text(
-            text = authorName,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            avatarSize = 26.dp,
         )
     }
 }
@@ -503,17 +507,31 @@ fun PostCardSkeleton(modifier: Modifier = Modifier) {
 }
 
 @Composable
-internal fun CategoryChip(name: String) {
-    Surface(
-        shape = PillShape,
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)),
-    ) {
+internal fun CategoryChip(name: String, onClick: (() -> Unit)? = null) {
+    val content: @Composable () -> Unit = {
         Text(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
             text = "#${name.lowercase()}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary,
+        )
+    }
+    val chipColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+    val chipBorder = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.28f))
+    if (onClick != null) {
+        Surface(
+            shape = PillShape,
+            color = chipColor,
+            border = chipBorder,
+            onClick = onClick,
+            content = content,
+        )
+    } else {
+        Surface(
+            shape = PillShape,
+            color = chipColor,
+            border = chipBorder,
+            content = content,
         )
     }
 }

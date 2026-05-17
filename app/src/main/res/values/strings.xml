@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Eter</string>
     <string name="feed">Feed</string>
+    <string name="search">Search</string>
     <string name="subscriptions">Subscriptions</string>
     <string name="following">Following</string>
     <string name="create">Create</string>
@@ -49,6 +50,11 @@
     <string name="post_comment_show_replies">Show replies (%1$d)</string>
     <string name="post_comment_hide_replies">Hide replies</string>
     <string name="post_reply_placeholder">Write a reply</string>
+    <string name="post_edit">Edit</string>
+    <string name="post_delete">Delete</string>
+    <string name="post_delete_title">Delete post?</string>
+    <string name="post_delete_message">This action cannot be undone. The post will be permanently deleted.</string>
+    <string name="post_delete_confirm">Delete post</string>
     <string name="edit_profile">Edit Profile</string>
     <string name="followers">Followers</string>
     <string name="settings">Settings</string>
@@ -151,7 +157,12 @@
     <string name="publish_post_not_found">The post was not found.</string>
     <string name="publish_forbidden_error">You do not have access to this post.</string>
     <string name="publish_unexpected_error">Something went wrong. Try again.</string>
+    <string name="publish_delete_draft_cta">Delete draft</string>
+    <string name="publish_delete_draft_title">Delete draft?</string>
+    <string name="publish_delete_draft_message">This action cannot be undone. The draft will be permanently deleted.</string>
+    <string name="publish_delete_draft_confirm">Delete draft</string>
     <string name="navigation_back">Go back</string>
+    <string name="dialog_cancel">Cancel</string>
     <string name="profile_logout_cta">Log out</string>
     <string name="profile_default_name">Eter user</string>
     <string name="profile_default_email">No email available</string>
@@ -207,6 +218,17 @@
     <string name="auth_unexpected_error">Something went wrong. Try again.</string>
     <string name="brand_logo_content_description">Eter logo</string>
     <string name="feed_popular_title">Popular</string>
+    <string name="feed_search_title">Search results</string>
+    <string name="feed_search_placeholder">Search posts</string>
+    <string name="feed_sort_popular">Popular</string>
+    <string name="feed_sort_newest">Newest</string>
+    <string name="feed_sort_oldest">Oldest</string>
+    <string name="search_parameters">Search</string>
+    <string name="search_reset_parameters">Reset</string>
+    <string name="feed_category_all">All categories</string>
+    <string name="feed_category_filter">Category</string>
+    <string name="feed_category_filter_all">All</string>
+    <string name="feed_categories_loading">Loading categories…</string>
     <string name="feed_like_post">Like post</string>
     <string name="feed_open_comments">Open comments</string>
     <string name="feed_open_post">Open post details</string>
@@ -219,8 +241,16 @@
     <string name="feed_loading_posts">Loading posts…</string>
     <string name="feed_empty_title">No popular posts yet</string>
     <string name="feed_empty_subtitle">Try again in a minute or refresh the feed.</string>
+    <string name="feed_search_empty_title">No posts found</string>
+    <string name="feed_search_empty_subtitle">Try another query, category, or sort option.</string>
     <string name="feed_retry">Retry</string>
     <string name="feed_error_network">Could not load feed due to network issues.</string>
     <string name="feed_error_forbidden">You do not have access to this feed.</string>
     <string name="feed_error_generic">Could not load the feed.</string>
+    <string name="subscriptions_title">Following</string>
+    <string name="subscriptions_empty_title">No posts from subscriptions yet</string>
+    <string name="subscriptions_empty_subtitle">Follow more authors or try again later.</string>
+    <string name="favorites_title">Liked posts</string>
+    <string name="favorites_empty_title">No liked posts yet</string>
+    <string name="favorites_empty_subtitle">Posts you like will appear here.</string>
 </resources>

@@ -51,7 +51,7 @@ fun BottomNavBar(
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TopLevelDestination.entries.forEach { destination ->
+            TopLevelDestination.entries.filter(TopLevelDestination::showInBottomBar).forEach { destination ->
                 val isSelected = currentTab == destination
                 val isCreate = destination == TopLevelDestination.CREATE
 

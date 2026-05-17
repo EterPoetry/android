@@ -109,6 +109,7 @@ dependencies {
     implementation(libs.com.google.android.libraries.identity.googleid)
     testImplementation(libs.junit5.api)
     testRuntimeOnly(libs.junit5.engine)
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.junit4)
     testImplementation(libs.io.mockk)
     testImplementation(libs.app.cash.turbine)

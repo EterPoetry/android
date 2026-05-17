@@ -220,6 +220,42 @@ class EditPostViewModel @AssistedInject constructor(
         }
     }
 
+    fun onDeleteDraftClick() {
+        val currentState = _uiState.value
+        val postId = currentState.postId ?: return
+        if (!currentState.canDeleteDraft) {
+            return
+        }
+
+        viewModelScope.launch {
+            localDraftSaveJob?.cancel()
+            _uiState.update {
+                it.copy(
+                    isDeleting = true,
+                    errorMessage = null,
+                )
+            }
+            runCatching {
+                postRepository.deletePost(postId = postId)
+            }.onSuccess {
+                editPostDraftRepository.deleteDraft(postId)
+                _uiState.update {
+                    it.copy(
+                        isDeleting = false,
+                        isDeleted = true,
+                    )
+                }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isDeleting = false,
+                        errorMessage = error.toEditPostUiMessage(),
+                    )
+                }
+            }
+        }
+    }
+
     fun onReplaceAudioPicked(uri: Uri?) {
         val postId = _uiState.value.postId ?: return
         if (uri == null || !_uiState.value.canReplaceAudio) {

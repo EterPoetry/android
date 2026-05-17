@@ -10,6 +10,8 @@ import com.nestorian87.eter.data.remote.dto.PostCategoryDto
 import com.nestorian87.eter.data.remote.dto.PostCommentDto
 import com.nestorian87.eter.data.remote.dto.PostCommentsResponseDto
 import com.nestorian87.eter.data.remote.dto.PostDto
+import com.nestorian87.eter.data.remote.dto.PostFeedResponseDto
+import com.nestorian87.eter.data.remote.dto.PostListResponseDto
 import com.nestorian87.eter.data.remote.dto.PostStatusDto
 import com.nestorian87.eter.data.remote.dto.PostTextSynchronizationDto
 import com.nestorian87.eter.data.remote.dto.PublicConfigDto
@@ -22,6 +24,8 @@ import com.nestorian87.eter.domain.model.PostAuthor
 import com.nestorian87.eter.domain.model.PostCategory
 import com.nestorian87.eter.domain.model.PostComment
 import com.nestorian87.eter.domain.model.PostCommentsPage
+import com.nestorian87.eter.domain.model.PostFeedPage
+import com.nestorian87.eter.domain.model.PostListPage
 import com.nestorian87.eter.domain.model.PostStatus
 import com.nestorian87.eter.domain.model.PostTextSynchronization
 import com.nestorian87.eter.domain.model.PopularPostsPage
@@ -80,6 +84,18 @@ fun PopularPostsResponseDto.toDomain(): PopularPostsPage = PopularPostsPage(
     total = total,
     snapshotId = snapshotId,
     snapshotGeneratedAt = snapshotGeneratedAt,
+    nextCursor = nextCursor,
+    hasMore = hasMore,
+)
+
+fun PostListResponseDto.toDomain(): PostListPage = PostListPage(
+    items = items.map(PostDto::toDomain),
+    total = total,
+    offset = offset,
+)
+
+fun PostFeedResponseDto.toDomain(): PostFeedPage = PostFeedPage(
+    items = items.map(PostDto::toDomain),
     nextCursor = nextCursor,
     hasMore = hasMore,
 )

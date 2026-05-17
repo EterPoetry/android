@@ -25,6 +25,9 @@ data class CreateKey(
 data object FavoritesKey : TopLevelNavKey
 
 @Serializable
+data object SearchKey : TopLevelNavKey
+
+@Serializable
 data object ProfileKey : TopLevelNavKey
 
 @Serializable

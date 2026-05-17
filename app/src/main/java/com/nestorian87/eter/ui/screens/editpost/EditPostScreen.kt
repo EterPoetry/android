@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.HourglassTop
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Refresh
@@ -27,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,6 +47,7 @@ import com.nestorian87.eter.R
 import com.nestorian87.eter.domain.model.PostStatus
 import com.nestorian87.eter.ui.components.AnimatedErrorMessage
 import com.nestorian87.eter.ui.components.AudioPlaybackCard
+import com.nestorian87.eter.ui.components.EterConfirmationDialog
 import com.nestorian87.eter.ui.components.FormScreenScaffold
 import com.nestorian87.eter.ui.components.LoadingOverlay
 import com.nestorian87.eter.ui.components.ScreenIntroCard
@@ -57,6 +60,7 @@ fun EditPostScreen(
     postId: Long,
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
+    onPostDeleted: () -> Unit = {},
     viewModel: EditPostViewModel = hiltViewModel<EditPostViewModel, EditPostViewModel.Factory> { factory ->
         factory.create(postId)
     },
@@ -64,6 +68,12 @@ fun EditPostScreen(
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     val replaceAudioLauncher = rememberLauncherForActivityResult(GetContent()) { uri ->
         viewModel.onReplaceAudioPicked(uri)
+    }
+
+    LaunchedEffect(uiState.isDeleted) {
+        if (uiState.isDeleted) {
+            onPostDeleted()
+        }
     }
 
     EditPostScreenContent(
@@ -79,6 +89,7 @@ fun EditPostScreen(
         onCategoryRemoved = viewModel::onCategoryRemoved,
         onCopyrightConfirmedChanged = viewModel::onCopyrightConfirmedChanged,
         onSaveClick = viewModel::onSaveClick,
+        onDeleteDraftClick = viewModel::onDeleteDraftClick,
         onRetryProcessingClick = viewModel::onRetryProcessingClick,
         onReplaceAudioClick = { replaceAudioLauncher.launch("audio/*") },
     )
@@ -97,11 +108,18 @@ private fun EditPostScreenContent(
     onCategoryRemoved: (Long) -> Unit,
     onCopyrightConfirmedChanged: (Boolean) -> Unit,
     onSaveClick: () -> Unit,
+    onDeleteDraftClick: () -> Unit,
     onRetryProcessingClick: () -> Unit,
     onReplaceAudioClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var isCategoryPickerOpen by rememberSaveable { mutableStateOf(false) }
+    var isDeleteDialogVisible by rememberSaveable { mutableStateOf(false) }
+    var deleteAttempted by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(isDeleteDialogVisible) {
+        if (!isDeleteDialogVisible) deleteAttempted = false
+    }
 
     FormScreenScaffold(
         modifier = modifier,
@@ -142,6 +160,7 @@ private fun EditPostScreenContent(
                     uiState = uiState,
                     onBackClick = onBackClick,
                     onSaveClick = onSaveClick,
+                    onDeleteDraftClick = { isDeleteDialogVisible = true },
                 )
                 Spacer(modifier = Modifier.height(EterSpacing.xxLarge))
             }
@@ -160,6 +179,23 @@ private fun EditPostScreenContent(
             onCategorySearchChanged = onCategorySearchChanged,
             onCategorySelected = onCategorySelected,
             onCategoryRemoved = onCategoryRemoved,
+        )
+    }
+
+    if (isDeleteDialogVisible) {
+        EterConfirmationDialog(
+            title = stringResource(R.string.publish_delete_draft_title),
+            message = stringResource(R.string.publish_delete_draft_message),
+            confirmText = stringResource(R.string.publish_delete_draft_confirm),
+            confirmIcon = Icons.Rounded.DeleteOutline,
+            isConfirmLoading = uiState.isDeleting,
+            errorMessage = if (deleteAttempted && !uiState.isDeleting) {
+                uiState.errorMessage?.let { stringResource(it.toMessageResId()) }
+            } else null,
+            onConfirm = {
+                onDeleteDraftClick()
+            },
+            onDismiss = { isDeleteDialogVisible = false },
         )
     }
 }
@@ -545,6 +581,7 @@ private fun EditPostScreenProcessingPreview() {
             onCategoryRemoved = {},
             onCopyrightConfirmedChanged = {},
             onSaveClick = {},
+            onDeleteDraftClick = {},
             onRetryProcessingClick = {},
             onReplaceAudioClick = {},
         )
@@ -585,6 +622,7 @@ private fun EditPostScreenDraftPreview() {
             onCategoryRemoved = {},
             onCopyrightConfirmedChanged = {},
             onSaveClick = {},
+            onDeleteDraftClick = {},
             onRetryProcessingClick = {},
             onReplaceAudioClick = {},
         )

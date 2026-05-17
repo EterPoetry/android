@@ -7,6 +7,7 @@ data class EditPostUiState(
     val postStatus: PostStatus? = null,
     val isLoadingPost: Boolean = true,
     val isSubmitting: Boolean = false,
+    val isDeleting: Boolean = false,
     val isReplacingAudio: Boolean = false,
     val isLoadingCategories: Boolean = false,
     val title: String = "",
@@ -21,6 +22,7 @@ data class EditPostUiState(
     val isCopyrightConfirmed: Boolean = false,
     val errorMessage: EditPostUiMessage? = null,
     val isSaved: Boolean = false,
+    val isDeleted: Boolean = false,
 ) {
     val isProcessing: Boolean
         get() = postStatus == PostStatus.PROCESSING
@@ -31,13 +33,17 @@ data class EditPostUiState(
     val canReplaceAudio: Boolean
         get() = postStatus == PostStatus.DRAFT && !isReplacingAudio && !isSubmitting
 
+    val canDeleteDraft: Boolean
+        get() = postStatus == PostStatus.DRAFT && !isReplacingAudio && !isSubmitting && !isDeleting
+
     val canSave: Boolean
         get() = isEditable &&
             title.isNotBlank() &&
             text.isNotBlank() &&
             isCopyrightConfirmed &&
             !isSubmitting &&
-            !isReplacingAudio
+            !isReplacingAudio &&
+            !isDeleting
 
     val selectedCountLabel: String
         get() = "${selectedCategories.size}/${EditPostUiDefaults.CATEGORY_LIMIT}"

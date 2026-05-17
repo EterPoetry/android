@@ -3,6 +3,8 @@ package com.nestorian87.eter.domain.repository
 import com.nestorian87.eter.domain.model.MyPostsPage
 import com.nestorian87.eter.domain.model.MyPostsQuery
 import com.nestorian87.eter.domain.model.ListenEndResult
+import com.nestorian87.eter.domain.model.PostFeedPage
+import com.nestorian87.eter.domain.model.PostListPage
 import com.nestorian87.eter.domain.model.ListenProgressResult
 import com.nestorian87.eter.domain.model.ListenStartResult
 import com.nestorian87.eter.domain.model.Post
@@ -10,6 +12,7 @@ import com.nestorian87.eter.domain.model.PostCategory
 import com.nestorian87.eter.domain.model.PostComment
 import com.nestorian87.eter.domain.model.PostCommentsPage
 import com.nestorian87.eter.domain.model.PostCommentsQuery
+import com.nestorian87.eter.domain.model.PostSearchQuery
 import com.nestorian87.eter.domain.model.PopularPostsPage
 import com.nestorian87.eter.domain.model.PublicConfig
 import com.nestorian87.eter.domain.model.UpdatePostPayload
@@ -29,6 +32,18 @@ interface PostRepository {
         cursor: String? = null,
         limit: Int? = null,
     ): PopularPostsPage
+
+    suspend fun searchPosts(query: PostSearchQuery = PostSearchQuery()): PostListPage
+
+    suspend fun getSubscriptionFeed(
+        cursor: String? = null,
+        limit: Int? = null,
+    ): PostFeedPage
+
+    suspend fun getLikedPosts(
+        offset: Int? = null,
+        limit: Int? = null,
+    ): PostListPage
 
     suspend fun updatePost(postId: Long, payload: UpdatePostPayload): Post
 
